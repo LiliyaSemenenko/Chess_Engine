@@ -1,4 +1,6 @@
 import numpy as np
+import random
+import time
 
 # =============================================================================
 # Piece initialization function
@@ -425,16 +427,18 @@ def king_in_check(boardState, color, positionKings):
 def allLegal(boardState,color,positionKings):
 
     listMoves = []    
+
     for i in range(8): # rows
         for j in range(8): # columns
-            for k in range(8): # rows
-                for l in range(8): # columns
-            # locate the pieces of same color as the engine's turn
-                    move = str(numColumn[j]) + str(8-i) + str(numColumn[l]) + str(8-k)
-                
-                    if checkLegal(move,boardState,color,positionKings):
-                        #print("Move: ",move)
-                        listMoves.append(move)
+            if boardState[i,j,1] == color and  boardState[i,j,0] != 0:
+                for k in range(8): # rows
+                    for l in range(8): # columns
+                # locate the pieces of same color as the engine's turn
+                        move = str(numColumn[j]) + str(8-i) + str(numColumn[l]) + str(8-k)     
+                    
+                        if checkLegal(move,boardState,color,positionKings):
+                            #print("Move: ",move)
+                            listMoves.append(move)
                     
     return listMoves
                 
@@ -463,15 +467,191 @@ def checkLegal(userMove, boardState, color, positionKings):
     return False
 
 
-# subtract sum of total points of white and black
-# output evaluation score  
+# draw by insuficient material
+def pieces_on_board(boardState, color):
+        
+    # opposite color from king
+    opp_color = 1 - color
+    
+    #kingString = positionKings[color]
+    listCol = []
+    listOpp = []
+    
+    for i in range(8): # rows
+        for j in range(8): # columns
+        
+            p = boardState[i,j,0]
+            
+            # locate all the pieces of color    
+            if boardState[i,j,1] == color and  p != 0:
+                listCol.append(p)
+            
+            # locate all the pieces of opposite color    
+            if boardState[i,j,1] == opp_color and  p != 0:
+                listOpp.append(p)
+            
+    return listCol, listOpp
 
-def Eval(boardState):
+
+
+def DrawStalemateMate(boardState,color,positionKings,gameOver,legalMoves=None):
+    
+    # passes legal moves if calculated previously
+    if legalMoves == None:
+        # start = time.time()
+        legalMoves = allLegal(boardState,color,positionKings)
+        # end = time.time()
+    
+    # print("total time for allLegal: ",end-start)
+    # print("")
+    
+    
+    listCol, listOpp = pieces_on_board(boardState, color)
+
+    # check if only kings are left 
+    # check if only knights or bishops left
+    if (len(listCol) == 1 or (len(listCol) == 2 and ((4 in listCol) or (5 in listCol)))):
+        if (len(listOpp) == 1 or (len(listOpp) == 2 and ((4 in listOpp) or (5 in listOpp)))):
+            gameOver = True
+            return "draw"
+        
+        
+    if legalMoves == [] :
+        
+        # Stalemate check
+        if not king_in_check(boardState, color, positionKings):
+            gameOver = True
+            return "stalemate"
+        
+        # Mate check
+        else:
+            gameOver = True
+            return "mate"
+        
+    return "play"
+        
+        
+def minimax_d1(boardState,color,positionKings,gameOver):
+
+    if color == 1: # white's move
+    
+        max_evalScore = -np.Inf
+        max_move = None
+        
+        legalMoves = allLegal(boardState,color,positionKings)
+        
+        for move in legalMoves:
+            # expected board with last user input
+            boardExp = movePiece(move,np.copy(boardState))
+            eval_of_move = Eval(boardExp,1-color,positionKings,gameOver)
+            
+            if eval_of_move > max_evalScore:
+                max_evalScore = eval_of_move
+                max_move = move
+        userMove = max_move
+    
+    
+    if color == 0: # black's move
+    
+        min_evalScore = np.Inf
+        min_move = None
+        
+        legalMoves = allLegal(boardState,color,positionKings)
+        
+        for move in legalMoves:
+            # expected board with last user input
+            boardExp = movePiece(move,np.copy(boardState))
+            eval_of_move = Eval(boardExp,1-color,positionKings,gameOver)
+            
+            if eval_of_move < min_evalScore:
+                min_evalScore = eval_of_move
+                min_move = move
+        userMove = min_move    
+        
+    return userMove
+
+def minimax(boardState,color,positionKings,gameOver,depth):
+    
+    legalMoves = allLegal(boardState,color,positionKings)
+    
+    if depth == 0 or legalMoves == []:
+        return Eval(boardState,color,positionKings,gameOver,legalMoves), None
+    
+    if color == 1: # white's move
+    
+        max_evalScore = -np.Inf
+        max_move = None
+        
+        for move in legalMoves:
+            # expected board with last user input
+            boardExp = movePiece(move,np.copy(boardState))
+            eval_of_move = minimax(boardExp,1-color,positionKings,gameOver,depth-1)[0]
+            
+            if eval_of_move >= max_evalScore:
+                max_evalScore = eval_of_move
+                max_move = move
+            
+        return max_evalScore, max_move
+    
+    if color == 0: # black's move
+    
+        min_evalScore = np.Inf
+        min_move = None
+        
+        for move in legalMoves:
+            # expected board with last user input
+            boardExp = movePiece(move,np.copy(boardState))
+            eval_of_move = minimax(boardExp,1-color,positionKings,gameOver,depth-1)[0]
+            
+            if eval_of_move <= min_evalScore:
+                min_evalScore = eval_of_move
+                min_move = move
+                
+        return min_evalScore, min_move    
+        
+# ===============================================================   
+#   # done:
+      
+#     if depth = 0 or node is a terminal node then
+#         return the heuristic value of node
+# # ===============================================================    
+#   # to do: 
+        
+#     if maximizingPlayer then
+#         value := −∞
+#         for each child of node do
+#             value := max( value, minimax( child, depth − 1, FALSE ) )
+#         return value
+#     else (* minimizing player *)
+#         value := +∞
+#         for each child of node do
+#             value := min( value, minimax( child, depth − 1, TRUE ) )
+#         return value
+    
+    
+
+# subtract sum of total points of white and black 
+
+def Eval(boardState,color,positionKings,gameOver,legalMoves=None):
+    
+    # checks for game status
+    status = DrawStalemateMate(boardState,color,positionKings,gameOver,legalMoves)
+    
+    if status == "mate":
+        # black or white gets mated
+        sumPoints = (1 - 2*color)*np.Inf # white or black wins
+        return sumPoints
+        
+    if status == "draw" or status == "stalemate":
+        sumPoints = 0
+        return sumPoints
+    
+    # calculates total evaluation score
     sumPoints = 0
-
+    
     for i in range(8):
         for j in range(8):
             b = boardState[i,j,:] 
             sumPoints += pieceEval[(b[0],b[1])]
             
-    return sumPoints
+    return sumPoints # output evaluation score 

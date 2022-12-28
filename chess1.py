@@ -3,6 +3,8 @@ import pandas as pd
 import colorama
 from colorama import Fore
 import random
+import time
+
 
 # importing functions
 from chessFunctions import *
@@ -27,7 +29,9 @@ positionKing_B =str("e") + str(8)
 positionKings = [positionKing_B, positionKing_W] 
 
 moveNumber = 0
-    
+   
+depth = 2
+ 
 while not gameOver: # while True
     
     # for positionLegal
@@ -43,29 +47,24 @@ while not gameOver: # while True
         
     moveCount(color)
     
-    # me vs engine
-    # if color == 0: # balck
-    #     # Obtaining user's input
-    #     userMove = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
-    #     print("")
-    
-    # else:
     legalMoves = allLegal(boardState,color,positionKings)
     
-    if legalMoves == [] :
+    # me vs engine
+    if color == 0: # black
+
+        # Obtaining user's input
+        #userMove = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
+        userMove = (random.choices(legalMoves, k=1))[0]
+        print("")
         
-        if not king_in_check(boardState, color, positionKings):
-            gameOver = True
-            print("hehe STALEMATE")
-            break
-    
-        else:
-            gameOver = True
-            print("hehe YOU LOST by checkmate!")
-            break
-    
-    
-    userMove = (random.choices(legalMoves, k=1))[0]
+    else: # white
+        start = time.time()
+        evalSc, userMove = minimax(boardState,color,positionKings,gameOver,depth)
+        end = time.time()
+        
+        print("minimax time: ", end-start)
+        print("chosen move: ",userMove)
+        print("eval score: ", evalSc)
     
     
     # Legality check
@@ -77,10 +76,7 @@ while not gameOver: # while True
         moveCount(color)
         userMove = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
         print("")
-    
-        
-    # Mate check
-        
+     
     
     
     # resign check
@@ -122,21 +118,25 @@ while not gameOver: # while True
     printboard(boardState)
 
     # evaluation score            
-    print("\nEvaluation: ", Eval(boardState))
+    print("\nEvaluation: ", Eval(boardState,color,positionKings,gameOver))
     
     # opposite color from king
     opColor = 1 - color
     print("\nKing in check: ",king_in_check(boardState,opColor,positionKings))
-    
     moveNumber += 1
     print("Number of moves: ",moveNumber)
     
+    # checks if opponent is mated or it's a draw since opp not able to move
+    status = DrawStalemateMate(boardState,1-color,positionKings,gameOver)
+        
+    if status != "play":
+        print(Fore.RED  + "\nhehe " + status + Fore.RESET)
+        break
+        
     print("_________________________________________________")
     count += 1
 
 # =============================================================================
-
-print("Git works") 
 
 
 
