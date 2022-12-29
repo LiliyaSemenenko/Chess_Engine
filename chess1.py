@@ -30,7 +30,10 @@ positionKings = [positionKing_B, positionKing_W]
 
 moveNumber = 0
    
-depth = 2
+depth = 4
+
+
+
  
 while not gameOver: # while True
     
@@ -48,23 +51,64 @@ while not gameOver: # while True
     moveCount(color)
     
     legalMoves = allLegal(boardState,color,positionKings)
-    
+    # if count > 1:
+    #     print("legal moves: ", legalMoves)
+        
     # me vs engine
-    if color == 0: # black
-
+    if color == 0: # black = 0, white = 1
+# 
         # Obtaining user's input
         #userMove = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
         userMove = (random.choices(legalMoves, k=1))[0]
         print("")
         
-    else: # white
+    else: # 
         start = time.time()
-        evalSc, userMove = minimax(boardState,color,positionKings,gameOver,depth)
+        #evalSc, userMove = minimax(boardState,color,positionKings,gameOver,depth)
+        evalSc, userMove = alphabeta(boardState,color,positionKings,gameOver,depth,-np.Inf,np.Inf)
         end = time.time()
         
-        print("minimax time: ", end-start)
+        print("alphabeta time: ", end-start)
         print("chosen move: ",userMove)
         print("eval score: ", evalSc)
+        
+        #userMove = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
+        
+        #userMove = (random.choices(legalMoves, k=1))[0]
+    
+    # # checks for both position and square IN check
+    # def TESTcheckLegal(userMove, boardState, color, positionKings):
+        
+    #     ###### king IN check ######
+        
+    #     # is position of intended userMove legal ?
+    #     positionL = positionLegal(userMove,boardState,color)
+        
+    #     if positionL:
+            
+    #         # expected board with last user input
+    #         boardExp = movePiece(userMove,boardState)
+            
+    #         # is king IN check?
+    #         kingINcheck = king_in_check(boardExp, color, positionKings)
+            
+    #         if not kingINcheck:
+    #             return True
+                
+    #     # returns True if: positionL = True and squareCheck = False
+    #     return False
+    
+    # start2 = time.time()
+    # RunLegal = checkLegal(userMove, boardState, color, positionKings)
+    # end2 = time.time()
+    # print("with copy: ",end2 - start2)
+    
+    # start = time.time()
+    # testLegal = TESTcheckLegal(userMove, boardState, color, positionKings)
+    # end = time.time()
+    # print("no copy: ",end-start)
+    
+
     
     
     # Legality check
@@ -77,7 +121,6 @@ while not gameOver: # while True
         userMove = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
         print("")
      
-    
     
     # resign check
     if userMove == "r":
@@ -128,9 +171,21 @@ while not gameOver: # while True
     
     # checks if opponent is mated or it's a draw since opp not able to move
     status = DrawStalemateMate(boardState,1-color,positionKings,gameOver)
-        
-    if status != "play":
-        print(Fore.RED  + "\nhehe " + status + Fore.RESET)
+    
+    # 0 = play
+    # 1 = mate
+    # 2 = draw by insufficient material
+    # 3 = stalemate
+    
+    gameStatus ={
+        0: "play",
+        1: "MATE",
+        2: "DRAW by insufficient material",
+        3: "STALEMATE",
+        }
+    
+    if status != 0:
+        print(Fore.RED  + "\nhehe " + gameStatus[status] + Fore.RESET)
         break
         
     print("_________________________________________________")
