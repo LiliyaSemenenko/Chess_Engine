@@ -30,9 +30,7 @@ positionKings = [positionKing_B, positionKing_W]
 
 moveNumber = 0
    
-depth = 4
-
-
+depth = 2
 
  
 while not gameOver: # while True
@@ -50,7 +48,11 @@ while not gameOver: # while True
         
     moveCount(color)
     
+    start1 = time.time()
     legalMoves = allLegal(boardState,color,positionKings)
+    end1 = time.time()
+    print("allLegal time: ", end1-start1)
+    
     # if count > 1:
     #     print("legal moves: ", legalMoves)
         
@@ -139,6 +141,14 @@ while not gameOver: # while True
     # moves piece on the board
     movePiece(userMove,boardState)
     
+    # update positionKings !!!!!!!!!!
+    # usermove[0,1]: is white/black king, then update
+    
+    
+    start3 = time.time()
+    movePiece(userMove,np.copy(boardState))
+    end3 = time.time()
+    print("movePiece with copy time: ", end3-start3)
     
     # castling check
     
@@ -159,9 +169,13 @@ while not gameOver: # while True
 
     # print board
     printboard(boardState)
-
+    
+    start2 = time.time()
     # evaluation score            
     print("\nEvaluation: ", Eval(boardState,color,positionKings,gameOver))
+    end2 = time.time()
+    print("Eval time: ", end2-start2)
+    
     
     # opposite color from king
     opColor = 1 - color
