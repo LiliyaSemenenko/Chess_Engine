@@ -1,10 +1,16 @@
+# got rid of strings to int conversion, small optimizations in positionLegal, added various modes for players, added incentive to look for and avoid checks, incrementally updated black & white positions
+
+
+
 import numpy as np
 import random
 import time
+import copy
 
 # =============================================================================
 # Piece initialization function
 # =============================================================================
+range_8 = range(8)
 
 def initialization():
     
@@ -18,7 +24,7 @@ def initialization():
     
     for i in [0, 7]: # pieces with 3+ value 
     
-        # black(0) & white(7) pieces
+        # black(0) & white(7) pieces ids
         boardState[i,4,0] = 1 # king
         boardState[i,3,0] = 2 # queen
         boardState[i,0,0] = 3 # rook L
@@ -29,7 +35,7 @@ def initialization():
         boardState[i,6,0] = 5 # knight R
             
         
-    for j in range(8): # columns: range(n) is 0:n-1
+    for j in range_8: # columns: range(n) is 0:n-1
         
         # black pawns
         boardState[1,j,0] = 6 # id
@@ -80,9 +86,9 @@ def printboard(boardState):
     }
     
     
-    for i in range(8): # rows
+    for i in range_8: # rows
         oneRow = str(8-i) + " "
-        for j in range(8): # columns
+        for j in range_8: # columns
             p = (boardState[i,j,0],boardState[i,j,1])
             oneRow += piece_color[p] + " "
         print(oneRow)
@@ -128,6 +134,14 @@ promotion = {
   'n': 5, 
 }
 
+# promotion piece number
+numPromotion = {
+  2: "q", 
+  3: "r", 
+  4: "b", 
+  5: 'n', 
+}
+
 # Piece evaluation
 pieceEval = {
     # black
@@ -151,6 +165,25 @@ pieceEval = {
 # =============================================================================
 # Functions: move piece (1),check if legal (2), king in check (3)
 # =============================================================================    
+
+def stringTOmove(userString):
+    
+    userMove = np.array([8-int(userString[1]),columnNum[userString[0]],8-int(userString[3]),columnNum[userString[2]],0])
+    if len(userString) == 5:
+        userMove[4] = promotion[userString[4]]
+
+    return userMove
+
+def moveTOstring(userMove):
+    
+    userString = numColumn[userMove[1]] + str(8-userMove[0]) + numColumn[userMove[3]] + str(8-userMove[2])
+    
+    if userMove[4] != 0:
+        userString = userString + numPromotion[userMove[4]]
+    
+    return userString
+    
+
 
 def validInput(userMove):
     
@@ -185,23 +218,43 @@ def validInput(userMove):
 
 
 
-def movePiece(userMove,boardState): 
+def movePiece(userMove,boardState,positionKings,BlackWhitePieces): 
+    
+    # current square, destination square, promotion
+    i,j,k,l,prom = userMove # r,c,r,c,prom
     
     # destination square
-    # ex. a3 
-    p = boardState[(8-int(userMove[1]),columnNum[userMove[0]],0)] # 6
-    c = boardState[(8-int(userMove[1]),columnNum[userMove[0]],1)] # 1
+    p = boardState[i,j,0] # 6
+    c = boardState[i,j,1] # 1
     
-    # promotion
-    if len(userMove) == 5:
-        p = promotion[userMove[4]] 
+    
+    # update the king
+    if p == 1:
+        # positionKings[c] = userMove[2:4]
+        positionKings[c] = [k,l] # matrix format
+    
+    # remove black/white piece from the list if on a current square
+    BlackWhitePieces[c].remove([i,j])
+    
+    # adds black/white piece to the list if on a destination square
+    BlackWhitePieces[c].append([k,l])
+    
+    dp = boardState[k,l,0]
+    
+    if dp != 0:
         
-    boardState[(8-int(userMove[3]),columnNum[userMove[2]],0)] = p  
-    boardState[(8-int(userMove[3]),columnNum[userMove[2]],1)] = c 
+        BlackWhitePieces[1-c].remove([k,l])
+
+    # promotion
+    if prom != 0:
+        p = prom
+        
+    boardState[k,l,0] = p  
+    boardState[k,l,1] = c 
     
     # current square
     # ex. a2     (0,6,0) = 6
-    boardState[(8-int(userMove[1]),columnNum[userMove[0]],0)] = 0 
+    boardState[i,j,0] = 0 
     
     return boardState
         
@@ -209,24 +262,18 @@ def movePiece(userMove,boardState):
 # check if userMove is legal
 def positionLegal(userMove,boardState,color):
     
-    # pass 'r' through function
-    if userMove == "r":
-        return True
+    # # pass 'r' through function
+    # if userMove == "r":
+    #     return True
     
-    # current horizontal sqr & vertical sqr
-    # ex. a2
-    ch = 8-int(userMove[1]) # 2 = row
-    cv = columnNum[userMove[0]] # 1 = column
+    # current square, destination square, promotion
+    ch,cv,dh,dv,prom = userMove # r,c,r,c,prom
     
     # current square 
     # ex. a2     (6,0,0) = 6
     p = boardState[ch,cv,0] # 6
     c = boardState[ch,cv,1] # 1
     
-    
-    # destination horizontal sqr & vertical sqr
-    dh = 8-int(userMove[3])
-    dv = columnNum[userMove[2]]
     
     # destination square
     # ex. a3    (5,0,1) 
@@ -239,6 +286,9 @@ def positionLegal(userMove,boardState,color):
     h = dv - cv # 1-1 = 0
     v = ch - dh # 3-2 = 1
 
+    absH = abs(h)    
+    absV = abs(v)
+    
     ###### general checks (applies to both sides) ######
     
     # 1. only pieces can move, not squares
@@ -252,24 +302,23 @@ def positionLegal(userMove,boardState,color):
     
     # 3. If there's my piece on a destination, it's illegal
     if c == dc and dp != 0: 
-
         return False
 
     ###### knight check ######
     if  p == 5:
-        goodKnight = (abs(h) == 1 or abs(h) == 2) and (abs(h)+abs(v) == 3)
-        if not goodKnight:
+        # goodKnight = (absH == 1 or absH == 2) and (absH+absV == 3)
+        if (absH+absV != 3) or not(absH == 1 or absH == 2):
             return False
     
     ###### bishop check ######
     def bishopLegal():
-        goodBishop = abs(h) == abs(v)
+        goodBishop = absH == absV
         if not goodBishop:
             return False
         i = 1
         sign_v = np.sign(v)
         sign_h = np.sign(h)
-        while i < abs(h):
+        while i < absH:
             if boardState[ch-sign_v*i,cv+sign_h*i,0] != 0:
                 return False
             i += 1
@@ -284,12 +333,12 @@ def positionLegal(userMove,boardState,color):
         # allows only go horiz or vert
         if h == 0: # moves vertically
             a,b = np.sort([ch,dh])
-            if sum(boardState[a+1:b,cv,0]) != 0:
+            if np.any(boardState[a+1:b,cv,0]):
                 return False
         
         elif v == 0 : # moves horizontally
             a,b = np.sort([cv,dv])
-            if sum(boardState[ch,a+1:b,0]) != 0:
+            if np.any(boardState[ch,a+1:b,0]):
                 return False
         else:
             return False
@@ -305,7 +354,7 @@ def positionLegal(userMove,boardState,color):
             if (rookLegal() == False):
                 return False
         
-        elif (abs(h) == abs(v)):
+        elif (absH == absV):
             if (bishopLegal() == False):
                 return False
         else:
@@ -314,8 +363,7 @@ def positionLegal(userMove,boardState,color):
     
     ###### king check ######
     if  p == 1:
-        goodKing = abs(h) <= 1 and abs(v) <= 1
-        if not goodKing:
+        if absH > 1 or absV > 1:
             return False
      
     ###### pawn check ###### DO EN PASSANT !!!
@@ -324,13 +372,13 @@ def positionLegal(userMove,boardState,color):
         
         # doesn't allow go 2 or more sqyares horizontally
         # ex. a2a3
-        if abs(h) > 1: # skip since h=0
+        if absH > 1: # skip since h=0
             return False
         
         # 1 square forward
         if v_dir == 1: # true
-            if abs(h) == 1: # false
-                if not (dc!=color and dp!=0): # 
+            if absH == 1: # false
+                if dc==color or dp==0: # 
                     return False
             # doesn't allow pawn to capture a piece in front    
             if h == 0 and dp != 0: # false
@@ -338,16 +386,17 @@ def positionLegal(userMove,boardState,color):
         
         # 2 squares forward    
         if v_dir == 2: # false
-            if abs(h) == 0:
+            if absH == 0:
         
                 # check if standing on initial square
-                if not ((ch==1 and color==0) or (ch==6 and color==1)):
+                # if not ((ch==1 and color==0) or (ch==6 and color==1)):
+                if (ch!=1 or color!=0) and (ch!=6 or color!=1):
                     return False
                 
                 # doesn't allow to jump over a piece
                 White2 = (ch == 6 and boardState[5,cv,0] != 0)
-                Black2 = (ch == 1 and boardState[2,cv,0] != 0)
-                if (White2 or Black2) or dp != 0:
+                # Black2 = (ch == 1 and boardState[2,cv,0] != 0)
+                if (White2 or (ch == 1 and boardState[2,cv,0] != 0)) or dp != 0:
                     return False
             else:
                 return False
@@ -357,143 +406,96 @@ def positionLegal(userMove,boardState,color):
         
         # promotion: black, white
         if dh == 7 or dh == 0:
-            if len(userMove) != 5:
+            if prom == 0:
                 return False
     
     return True
 
-# def kingLocation(userMove,boardState,color):
     
-#     # current horizontal sqr & vertical sqr
-#     # ex. 
-#     ch = 8-int(userMove[1]) # 2 = row
-#     cv = columnNum[userMove[0]] # 1 = column 
-    
-#     # current square 
-#     # ex. a2     (6,0,0) = 6
-#     p = boardState[ch,cv,0] # 6
-#     c = boardState[ch,cv,1] # 1
-    
-    
-#     # # destination horizontal sqr & vertical sqr
-#     # dh = 8-int(userMove[3])
-#     # dv = columnNum[userMove[2]]
-    
-#     # # destination square
-#     # # ex. a3    (5,0,1) 
-#     # dp = boardState[dh,dv,0] # 
-#     # dc = boardState[dh,dv,1] # 1
-    
-#     # if king moved
-#     if p == 1 and c == color:
-#         #dh = 8-int(userMove[3]) # king horizontal destination
-#         #dv = userMove[2] # king vertical destination
-#         positionKing = userMove[2] + userMove[3]
-#         #positionKing = boardState[ch,cv,0]
-        
-#     return positionKing
-
-    
-def king_in_check(boardState, color, positionKings):
+def king_in_check(boardState, color, positionKings,BlackWhitePieces):
     
     # opposite color from king
     opp_color = 1 - color
     
-    #kingString = positionKings[color]
+    listOpp = BlackWhitePieces[1-color]
     
-    listOpp = []    
-    for i in range(8): # rows
-        for j in range(8): # columns
-        
-            # locate the king of same color as the userMove input
-            if boardState[i,j,0] == 1 and boardState[i,j,1] == color:
-                kh = 8-i # king horizontal
-                kv = numColumn[j] # king vertical
-                kingString = str(kv) + str(kh)
-            
-            # locate all the pieces of opposite color    
-            if boardState[i,j,1] == opp_color and  boardState[i,j,0] != 0:
-                listOpp.append([i,j])
+    kingCol = positionKings[color]
+    kh = kingCol[0] # 0:7 matrix format
     
-    # 
-    for i in range(len(listOpp)):
-        ap = listOpp[i] # attack piece of opposite color
-        av = numColumn[ap[1]] # attack verical 
-        ########################################
-        ah = ap[0] # row
-        attackString = str(av) + str(8-ap[0])
+    move = np.zeros(5, dtype = int)
+    move[2:4] = kingCol
+    # attack piece in list of opposite color
+    for ap in listOpp:
+        ah = ap[0] # row matrix format
+        av = ap[1] # attack verical 
+        move[0:2] = ap
         
-        if boardState[ap[0],ap[1],0] == 6 and ((ah == 1 and kh==0) or (ah == 6 and kh == 7)):
-            for key in promotion.keys():
-                #attackString = str(av) + str(8-ap[0])
-                moveString = attackString + kingString + key # d7e8q format
+        if boardState[ah,av,0] == 6 and ((ah == 1 and kh==0) or (ah == 6 and kh == 7)):
+            for prom in [2,3,4,5]:
+                move[4] = prom # d7e8q format
                 
-                if positionLegal(moveString,boardState,opp_color): # if condition true
+                if positionLegal(move,boardState,opp_color): # if condition true
                     return True
-        else:        
-        #########################################   
-######### do ctrl+[ to come back{
-            #attackString = str(av) + str(8-ap[0])
-        
-            # opp color piece location + king location
-            moveString = attackString + kingString # a2e1 format
-
+        else:
+            move[4] = 0
             # tells if king of the same color as userMove is in check
-            if positionLegal(moveString,boardState,opp_color): # if condition true
+            if positionLegal(move,boardState,opp_color): # if condition true
                 return True
-######### }
-    return False # by default
-    
 
-def allLegal(boardState,color,positionKings):
+    return False # by default
+ 
+
+def allLegal(boardState,color,positionKings,BlackWhitePieces):
 
     listMoves = []    
     
-    range_8 = range(8)
+    listCol = BlackWhitePieces[color]
     
-    for i in range_8: # current rows
-        for j in range_8: # columns
-            # if piece is of the same color and not empty
-            if boardState[i,j,1] == color and  boardState[i,j,0] != 0:
-                
-                for k in range_8: # destination rows
-                    for l in range_8: # columns
-                        if (boardState[k,l,1] == (1-color)) or boardState[k,l,0] == 0:
-                            
-                            # locate the pieces of same color as the engine's turn
-                            move = str(numColumn[j]) + str(8-i) + str(numColumn[l]) + str(8-k) 
-                            
-                            # promotion pawns
-                            if boardState[i,j,0] == 6 and ((i == 1 and k == 0) or (i == 6 and k == 7)):
-                                for key in promotion.keys():
-                                    promMove = move + key
-                                    
-                                    if checkLegal(promMove,boardState,color,positionKings):
-                                        listMoves.append(promMove)
-                        
-                            else:
-                                if checkLegal(move,boardState,color,positionKings):
-                                    listMoves.append(move)
+    move = np.zeros(5, dtype=int)
+    for piece in listCol:
+        i,j = piece # i = 0, j = 1
+        move[0:2] = piece
+        
+        for k in range_8: # destination rows
+            for l in range_8: # columns
+                if (boardState[k,l,1] == (1-color)) or boardState[k,l,0] == 0:
+                    # locate the pieces of same color as the engine's turn
+                    move[2:4] = [k,l]
                     
+                    # promotion pawns
+                    if boardState[i,j,0] == 6 and ((i == 1 and k == 0) or (i == 6 and k == 7)):
+                        for prom in [2,3,4,5]:
+                            move[4] = prom
+                            
+                            if checkLegal(move,boardState,color,positionKings,BlackWhitePieces):
+                                listMoves.append(np.copy(move)) #!!!! fix this
+                
+                    else:
+                        move[4] = 0
+                        if checkLegal(move,boardState,color,positionKings,BlackWhitePieces):
+                            listMoves.append(np.copy(move))
+                    
+
     return listMoves
                 
 
-
 # checks for both position and square IN check
-def checkLegal(userMove, boardState, color, positionKings):
+def checkLegal(userMove, boardState, color, positionKings,BlackWhitePieces):
     
     ###### king IN check ######
     
     # is position of intended userMove legal ?
     positionL = positionLegal(userMove,boardState,color)
     
+    
     if positionL:
-        
+        kingsExp = np.copy(positionKings)
+        piecesExp = copy.deepcopy(BlackWhitePieces)
         # expected board with last user input
-        boardExp = movePiece(userMove,np.copy(boardState))
+        boardExp = movePiece(userMove,np.copy(boardState),kingsExp,piecesExp)
         
         # is king IN check?
-        kingINcheck = king_in_check(boardExp, color, positionKings)
+        kingINcheck = king_in_check(boardExp, color, kingsExp,piecesExp)
         
         if not kingINcheck:
             return True
@@ -502,52 +504,24 @@ def checkLegal(userMove, boardState, color, positionKings):
     return False
 
 
-# draw by insuficient material
-def pieces_on_board(boardState, color):
-        
-    # opposite color from king
-    opp_color = 1 - color
-    
-    #kingString = positionKings[color]
-    listCol = []
-    listOpp = []
-    
-    for i in range(8): # rows
-        for j in range(8): # columns
-        
-            p = boardState[i,j,0]
-            
-            # locate all the pieces of color    
-            if boardState[i,j,1] == color and  p != 0:
-                listCol.append(p)
-            
-            # locate all the pieces of opposite color    
-            if boardState[i,j,1] == opp_color and  p != 0:
-                listOpp.append(p)
-            
-    return listCol, listOpp
-
-
-
-def DrawStalemateMate(boardState,color,positionKings,gameOver,legalMoves=None):
+def DrawStalemateMate(boardState,color,positionKings,gameOver,BlackWhitePieces,legalMoves=None):
     
     # 0 = play
     # 1 = mate
     # 2 = draw by insufficient material
     # 3 = stalemate
-    
+    # 4 = in check
+    # 5 = opponent in check
     
     # passes legal moves if calculated previously
     if legalMoves == None:
         # start = time.time()
-        legalMoves = allLegal(boardState,color,positionKings)
+        legalMoves = allLegal(boardState,color,positionKings,BlackWhitePieces)
         # end = time.time()
     
-    # print("total time for allLegal: ",end-start)
-    # print("")
     
-    
-    listCol, listOpp = pieces_on_board(boardState, color)
+    listCol = BlackWhitePieces[color]
+    listOpp = BlackWhitePieces[1-color]
 
     # check if only kings are left 
     # check if only knights or bishops left
@@ -555,12 +529,13 @@ def DrawStalemateMate(boardState,color,positionKings,gameOver,legalMoves=None):
         if (len(listOpp) == 1 or (len(listOpp) == 2 and ((4 in listOpp) or (5 in listOpp)))):
             gameOver = True
             return 2
+    
+    myKcheck = king_in_check(boardState, color, positionKings,BlackWhitePieces)    
         
-        
-    if legalMoves == [] :
+    if legalMoves == []:
         
         # Stalemate check
-        if not king_in_check(boardState, color, positionKings):
+        if not myKcheck:
             gameOver = True
             return 3
         
@@ -569,54 +544,27 @@ def DrawStalemateMate(boardState,color,positionKings,gameOver,legalMoves=None):
             gameOver = True
             return 1
         
+    if myKcheck:
+        return 4
+    
+    OppKcheck = king_in_check(boardState,1-color, positionKings,BlackWhitePieces)
+    if OppKcheck:
+        return 5
+
+     
     return 0
         
         
-# def minimax_d1(boardState,color,positionKings,gameOver):
+# =====================================================================
+# minimax, alphabeta pruning
+# =====================================================================
 
-#     if color == 1: # white's move
+def minimax(boardState,color,positionKings,gameOver,depth,BlackWhitePieces):
     
-#         max_evalScore = -np.Inf
-#         max_move = None
-        
-#         legalMoves = allLegal(boardState,color,positionKings)
-        
-#         for move in legalMoves:
-#             # expected board with last user input
-#             boardExp = movePiece(move,np.copy(boardState))
-#             eval_of_move = Eval(boardExp,1-color,positionKings,gameOver)
-            
-#             if eval_of_move > max_evalScore:
-#                 max_evalScore = eval_of_move
-#                 max_move = move
-#         userMove = max_move
-    
-    
-    # if color == 0: # black's move
-    
-    #     min_evalScore = np.Inf
-    #     min_move = None
-        
-    #     legalMoves = allLegal(boardState,color,positionKings)
-        
-    #     for move in legalMoves:
-    #         # expected board with last user input
-    #         boardExp = movePiece(move,np.copy(boardState))
-    #         eval_of_move = Eval(boardExp,1-color,positionKings,gameOver)
-            
-    #         if eval_of_move < min_evalScore:
-    #             min_evalScore = eval_of_move
-    #             min_move = move
-    #     userMove = min_move    
-        
-    # return userMove
-
-def minimax(boardState,color,positionKings,gameOver,depth):
-    
-    legalMoves = allLegal(boardState,color,positionKings)
+    legalMoves = allLegal(boardState,color,positionKings,BlackWhitePieces)
     
     if depth == 0 or legalMoves == []:
-        return Eval(boardState,color,positionKings,gameOver,legalMoves), None
+        return Eval(boardState,color,positionKings,gameOver,BlackWhitePieces,legalMoves), None
     
     if color == 1: # white's move
     
@@ -624,9 +572,11 @@ def minimax(boardState,color,positionKings,gameOver,depth):
         max_move = None
         
         for move in legalMoves:
+            piecesExp = copy.deepcopy(BlackWhitePieces)
+            kingsExp = np.copy(positionKings)
             # expected board with last user input
-            boardExp = movePiece(move,np.copy(boardState))
-            eval_of_move = minimax(boardExp,1-color,positionKings,gameOver,depth-1)[0]
+            boardExp = movePiece(move,np.copy(boardState),kingsExp,piecesExp)
+            eval_of_move = minimax(boardExp,1-color,kingsExp,gameOver,depth-1,piecesExp)[0]
             
             if eval_of_move >= max_evalScore:
                 max_evalScore = eval_of_move
@@ -640,9 +590,11 @@ def minimax(boardState,color,positionKings,gameOver,depth):
         min_move = None
         
         for move in legalMoves:
+            piecesExp = copy.deepcopy(BlackWhitePieces)
+            kingsExp = np.copy(positionKings)
             # expected board with last user input
-            boardExp = movePiece(move,np.copy(boardState))
-            eval_of_move = minimax(boardExp,1-color,positionKings,gameOver,depth-1)[0]
+            boardExp = movePiece(move,np.copy(boardState),kingsExp,piecesExp)
+            eval_of_move = minimax(boardExp,1-color,kingsExp,gameOver,depth-1,piecesExp)[0]
             
             if eval_of_move <= min_evalScore:
                 min_evalScore = eval_of_move
@@ -652,13 +604,12 @@ def minimax(boardState,color,positionKings,gameOver,depth):
 
 
 
-# ===============================================================
-def alphabeta(boardState,color,positionKings,gameOver,depth,α,β):
+def alphabeta(boardState,color,positionKings,gameOver,depth,α,β,BlackWhitePieces):
     
-    legalMoves = allLegal(boardState,color,positionKings)
+    legalMoves = allLegal(boardState,color,positionKings,BlackWhitePieces)
     
     if depth == 0 or legalMoves == []:
-        return Eval(boardState,color,positionKings,gameOver,legalMoves), None
+        return Eval(boardState,color,positionKings,gameOver,BlackWhitePieces,legalMoves), None
     
     
     if color == 1: # white's move
@@ -667,9 +618,11 @@ def alphabeta(boardState,color,positionKings,gameOver,depth,α,β):
         max_move = None
         
         for move in legalMoves:
+            piecesExp = copy.deepcopy(BlackWhitePieces)
+            kingsExp = np.copy(positionKings)
             # expected board with last user input
-            boardExp = movePiece(move,np.copy(boardState))
-            eval_of_move = alphabeta(boardExp,1-color,positionKings,gameOver,depth-1,α,β)[0]
+            boardExp = movePiece(move,np.copy(boardState),kingsExp,piecesExp)
+            eval_of_move = alphabeta(boardExp,1-color,kingsExp,gameOver,depth-1,α,β,piecesExp)[0]
             
             if eval_of_move >= max_evalScore:
                 max_evalScore = eval_of_move
@@ -690,9 +643,11 @@ def alphabeta(boardState,color,positionKings,gameOver,depth,α,β):
         min_move = None
         
         for move in legalMoves:
+            piecesExp = copy.deepcopy(BlackWhitePieces)
+            kingsExp = np.copy(positionKings)
             # expected board with last user input
-            boardExp = movePiece(move,np.copy(boardState))
-            eval_of_move = alphabeta(boardExp,1-color,positionKings,gameOver,depth-1,α,β)[0]
+            boardExp = movePiece(move,np.copy(boardState),kingsExp,piecesExp)
+            eval_of_move = alphabeta(boardExp,1-color,kingsExp,gameOver,depth-1,α,β,piecesExp)[0]
             
             if eval_of_move <= min_evalScore:
                 min_evalScore = eval_of_move
@@ -707,17 +662,18 @@ def alphabeta(boardState,color,positionKings,gameOver,depth,α,β):
         
 # ===============================================================   
 
-# subtract sum of total points of white and black 
-
-def Eval(boardState,color,positionKings,gameOver,legalMoves=None):
+# TIME EVERYTHING in main loop
+def Eval(boardState,color,positionKings,gameOver,BlackWhitePieces,legalMoves=None):
     
     # 0 = play
     # 1 = mate
     # 2 = draw by insufficient material
     # 3 = stalemate
+    # 4 = player in check 
+    # 5 = opponent in check
     
     # checks for game status
-    status = DrawStalemateMate(boardState,color,positionKings,gameOver,legalMoves)
+    status = DrawStalemateMate(boardState,color,positionKings,gameOver,BlackWhitePieces,legalMoves)
     
     if status == 1:
         # black or white gets mated
@@ -727,11 +683,20 @@ def Eval(boardState,color,positionKings,gameOver,legalMoves=None):
     if status == 2 or status == 3:
         sumPoints = 0
         return sumPoints
-    
+        
     # calculates total evaluation score
     sumPoints = 0
     
-    range_8 = range(8)
+    # player's king in check
+    if status == 4:
+        checkPoints = -(1e-5)*(2*color-1)
+        sumPoints += checkPoints
+    
+    # opponent's king in check
+    if status == 5:
+        OppCheckPoints = (1e-5)*(2*color-1)
+        sumPoints += OppCheckPoints
+    
     Npieces_BL = 0
     Npieces_WH = 0
     
@@ -761,10 +726,11 @@ def Eval(boardState,color,positionKings,gameOver,legalMoves=None):
                 if c == 1 and Npieces_WH < 12: # white
                     WHprom = (1e-5)*(6-i)   
                     sumPoints += WHprom
+                    
             # add points when pushing pawns        
-            if i in range(1,7) and j in range(2,6) and b[0] != 0:
+            if i in range(2,6) and j in range(2,6) and b[0] != 0:
                 #c = b[1]
-                centerPoints = (1e-5)*(2*c-1)
+                centerPoints = (1e-4)*(2*c-1)
                 sumPoints += centerPoints
                 
             # piece, color
