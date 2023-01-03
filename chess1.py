@@ -4,6 +4,7 @@ from colorama import Fore
 import random
 import time
 import copy
+import collections
 
 # importing functions
 from chessFunctions import *
@@ -13,9 +14,9 @@ from chessFunctions import *
 # =============================================================================
 
 depth = 2
-engineColor = 0
-engineMode = "AB" # "MM" , "random"
-opponentMode = "user" # "user", "random"
+engineColor = 1
+engineMode = "AB" # "AB", "MM" , "random"
+opponentMode = "random" # "user", "random"
 
 # =============================================================================
 # Main game execution loop
@@ -36,14 +37,14 @@ positionKing_B = [0,4] # e8
 positionKings = [positionKing_B, positionKing_W] 
 
 
+# MAKE A SET INSTEAD
 # initialize pieces
-BlackWhitePieces = [[],[]]
+BlackWhitePieces = [set(),set()]
 
 for i in range(8): # rows
     for j in range(8): # columns
         if boardState[i,j,0] != 0:
-            BlackWhitePieces[boardState[i,j,1]].append([i,j])
-
+            BlackWhitePieces[boardState[i,j,1]].add((i,j))
 
 # 0 = play
 # 1 = mate
@@ -64,56 +65,12 @@ promotion = {
   "b": 4, 
   'n': 5, 
 }
+
+#evaluation = 0
+
 # =============================================================================
 # =============================================================================
 # BRUTAL TESTING
-
-# def TESTmovePiece(userMove,boardState,positionKings,BlackWhitePieces): 
-    
-#     i = 8-int(userMove[1]) # row
-#     j = columnNum[userMove[0]] # column
-    
-#     k = 8-int(userMove[3]) # row
-#     l = columnNum[userMove[2]] # column
-    
-    
-#     # destination square
-#     p = boardState[i,j,0] # 6
-#     c = boardState[i,j,1] # 1
-    
-    
-#     # update the king
-#     if p == 1:
-#         # positionKings[c] = userMove[2:4]
-#         positionKings[c] = [k,l] # matrix format
-    
-#     # remove black/white piece from the list if on a current square
-#     BlackWhitePieces[c].remove([i,j])
-    
-#     # adds black/white piece to the list if on a destination square
-#     BlackWhitePieces[c].append([k,l])
-    
-#     dp = boardState[k,l,0]
-    
-#     if dp != 0:
-        
-#         BlackWhitePieces[1-c].remove([k,l])
-
-#     # promotion
-#     if len(userMove) == 5:
-#         p = promotion[userMove[4]] 
-        
-#     boardState[k,l,0] = p  
-#     boardState[k,l,1] = c 
-    
-#     # current square
-#     # ex. a2     (0,6,0) = 6
-#     boardState[i,j,0] = 0 
-    
-#     return boardState
-
-
-
 
 def TESTallLegal(boardState,color,positionKings,BlackWhitePieces):
 
@@ -169,14 +126,48 @@ while not gameOver: # while True
         print("\nWhite to move\n")
     
     start1 = time.time()
-    legalMoves = allLegal(boardState,color,positionKings,BlackWhitePieces)
-    
-    convert = [moveTOstring(userMove) for userMove in legalMoves]
-    
-    #print("legalMoves: ",convert)
+    OLD_legalMoves = OLD_allLegal(boardState,color,positionKings,BlackWhitePieces)
+    for move in OLD_legalMoves:
+        OLDmove = moveTOstring(move)
     end1 = time.time()
+    
     timeALL = end1-start1
-    print("allLegal time: ", timeALL)
+    print("OLD_legalMoves time: ", timeALL)
+    
+
+    start1 = time.time()
+
+    k = 100
+    for i in range(k):
+        legalMoves = allLegal(boardState,color,positionKings,BlackWhitePieces)
+    # for move in legalMoves:
+    #     print('legalMoves: ',moveTOstring(move))
+        
+    end1 = time.time()
+    timeAVG = (end1-start1)/k
+    print("Avg allLegal time: ", timeAVG)
+    
+    timeALL = end1-start1
+    
+    #print("allLegal time: ", timeALL)
+    print("")
+    print("num legalMoves: ",len(legalMoves))
+    
+
+
+    lst1 = [moveTOstring(move) for move in OLD_legalMoves]
+    lst2 = [moveTOstring(move) for move in legalMoves]
+    
+    def comparelists(list1, list2):
+        return(list1.sort()==list2.sort())
+    
+    if not comparelists(lst1, lst2):
+        print("unmatched lists")
+        break
+    
+    #print(comparelists(lst1, lst2))
+    
+    # print("compare list: ",collections.Counter(OLD_legalMoves) == collections.Counter(legalMoves))
 
     # start1 = time.time()
     # k = 100
@@ -187,11 +178,6 @@ while not gameOver: # while True
     # print("Avg TESTallLegal time: ", timeAVG)
 
     # print("time/avg time",timeALL/timeAVG)
-
-
-
-
-
 
     # opponent's turn
     if color == 1-engineColor: # black = 0, white = 1
@@ -220,28 +206,30 @@ while not gameOver: # while True
             userMove = (random.choices(legalMoves, k=1))[0]
                 
         print("")
-        print("chosen move: ",userMove)
-    
+        print("chosen move: ",moveTOstring(userMove))
+        
     # engine's turn
     else: 
         start = time.time()
         
         if engineMode == "AB":
-            evalSc, userMove = alphabeta(boardState,color,positionKings,gameOver,depth,-np.Inf,np.Inf,BlackWhitePieces)
+            evalSc, userMove = alphabeta(boardState,color,positionKings,depth,-np.Inf,np.Inf,BlackWhitePieces)
         if engineMode == "MM":
-            evalSc, userMove = minimax(boardState,color,positionKings,gameOver,depth,BlackWhitePieces)
+            evalSc, userMove = minimax(boardState,color,positionKings,depth,BlackWhitePieces)
         if engineMode == "random":
             userMove = (random.choices(legalMoves, k=1))[0]
         
         end = time.time()
 
         print("engine time: ", end-start)
-        print("chosen move: ",userMove)
-        print("eval score: ", evalSc)
+        print("userMove: ", userMove)
+        print("chosen move: ",moveTOstring(userMove))
+        # print("eval score: ", evalSc)
         
     
     # moves piece on the board & updates position kings after the move is made
     movePiece(userMove,boardState,positionKings,BlackWhitePieces)
+    
     
 
     # start1 = time.time()
@@ -264,21 +252,32 @@ while not gameOver: # while True
     # print board
     printboard(boardState)
     
+    # # TEST
+    # if moveNumber == 7:
+    #     undoMove(userMove,cpc,dpc,boardState,BlackWhitePieces)
+    #     printboard(boardState)
+    #     break
+    # # TEST
     
-    legalMoves = allLegal(boardState,color,positionKings,BlackWhitePieces)
+    
+    
+    
+    # legalMoves = allLegal(boardState,color,positionKings,BlackWhitePieces)
 
-    evaluation = None
+    evalt = None
     k = 100
     start2 = time.time()
 
     for i in range(k):
+        
     # evaluation score            
-        #print("\nEvaluation: ", Eval(boardState,color,positionKings,gameOver,BlackWhitePieces,legalMoves))
-        evaluation = Eval(boardState,color,positionKings,gameOver,BlackWhitePieces,legalMoves)
+        #print("\nEvaluation: ", Eval(boardState,color,positionKings,BlackWhitePieces,legalMoves))
+        evalt = Eval(boardState,color,positionKings,BlackWhitePieces,legalMoves)
     end2 = time.time()
     timeAVG = (end2-start2)/k
-    print("\nEvaluation: ", evaluation)
-    #print("Eval time: ", end2-start2)
+    print("\nEvaluation: ", evalt)
+    # #print("Eval time: ", end2-start2)
+    
     print("Avg Eval time: ", timeAVG)
     
     
@@ -295,13 +294,21 @@ while not gameOver: # while True
     
     # opposite color from king
     opColor = 1 - color
-    print("\nKing in check: ",king_in_check(boardState,opColor,positionKings,BlackWhitePieces))
+    
+    start = time.time()
+    k = 100
+    for i in range(k):
+        check = king_in_check(boardState,opColor,positionKings,BlackWhitePieces)
+    end = time.time()
+    timeAVG = (end-start)/k
+    print("\nKing in check: ",check)
+    print("King in check AVG time: ", timeAVG)
     
     print("Number of moves: ",moveNumber)
     
     start2 = time.time()
     # checks if opponent is mated or it's a draw since opp not able to move
-    status = DrawStalemateMate(boardState,1-color,positionKings,gameOver,BlackWhitePieces)
+    status = DrawStalemateMate(boardState,1-color,positionKings,BlackWhitePieces)
 
     
     if status != 0 and status != 4:
