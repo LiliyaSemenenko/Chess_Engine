@@ -10,7 +10,7 @@ from global_parameters import *
 # Functions: movePiece, undoMove, positionLegal, king_in_check, generateLegal 
 # =============================================================================
 
-def movePiece(userMove, boardState, positionKings, BlackWhitePieces,evalPoints):
+def movePiece(userMove, boardState, positionKings,BlackWhitePieces):
 
     # current square, destination square, promotion
     i, j, k, l, prom = userMove  # r,c,r,c,prom
@@ -41,11 +41,6 @@ def movePiece(userMove, boardState, positionKings, BlackWhitePieces,evalPoints):
     if dp != 0:
         BlackWhitePieces[1-c].remove((k, l))
         
-        # evaluation
-        if c != dc:
-            evalPoints -= pieceEval[(dp,dc)]
-    
-    
     # promotion
     if prom != 0:
         p = prom
@@ -59,16 +54,67 @@ def movePiece(userMove, boardState, positionKings, BlackWhitePieces,evalPoints):
 
     return cpc, dpc  # current[piece,color], destination[piece,color]
 
-
-def undoMove(userMove, cpc, dpc, boardState, BlackWhitePieces,evalPoints):
+def movePiece_EVAL(userMove, boardState, positionKings,BlackWhitePieces,evalPoints):
 
     # current square, destination square, promotion
     i, j, k, l, prom = userMove  # r,c,r,c,prom
+
+    # current becoming destination square
+    p, c = boardState[i, j, :]
+    cpc = np.copy(boardState[i, j, :])  # currentpiece & color
+
+
+    # update the king
+    if p == 1:
+        # positionKings[c] = userMove[2:4]
+        positionKings[c] = [k, l]  # matrix format
+
+
+    # update bl/wh pieces set
+    # remove black/white piece from the list if on a current square
+    BlackWhitePieces[c].remove((i, j))
+
+    # adds black/white piece to the list if on a destination square
+    BlackWhitePieces[c].add((k, l))
     
-    # evaluation
-    # if dp != 0:
-    #     if c != dc:
-    #         evalPoints -= pieceEval[(dp,dc)]
+
+    dp = boardState[k, l, 0]  # dpc[0] # destination piece
+    dpc = np.copy(boardState[k, l, :])  # destination piece & color
+    dc = boardState[k, l, 1]
+    
+    if dp != 0:
+        BlackWhitePieces[1-c].remove((k, l))
+        
+        
+    if dp != 0:
+        # evaluation for eating a piece
+        if c != dc:
+            evalPoints -= pieceEval[(dp,dc)]
+    
+    # add points for controlling center with pieces
+    if (k > 1 and k < 6) and (l > 1 and l < 6):
+
+        centerPoints = (1e-4)*signCol[c] # Bl: 2*0-1 = -1, Wh: 2*1-1 = 1
+        evalPoints += centerPoints
+
+    # promotion
+    if prom != 0:
+        p = prom
+
+    boardState[k, l, 0] = p
+    boardState[k, l, 1] = c
+
+    # current square
+    # ex. a2     (0,6,0) = 6
+    boardState[i, j, 0] = 0
+
+    return cpc, dpc, evalPoints  # current[piece,color], destination[piece,color]
+
+
+def undoMove(userMove, cpc, dpc, boardState, BlackWhitePieces):
+
+    # current square, destination square, promotion
+    i, j, k, l, prom = userMove  # r,c,r,c,prom
             
     
     boardState[i, j, :] = cpc  # current piece & color
@@ -76,7 +122,8 @@ def undoMove(userMove, cpc, dpc, boardState, BlackWhitePieces,evalPoints):
 
     boardState[k, l, :] = dpc  # destination piece & color
     dp = dpc[0]  # destination piece
-
+    dc = dpc[1]
+    
     # remove black/white piece from the list if on a current square
     BlackWhitePieces[c].remove((k, l))
 
@@ -86,8 +133,35 @@ def undoMove(userMove, cpc, dpc, boardState, BlackWhitePieces,evalPoints):
     if dp != 0:
         BlackWhitePieces[1-c].add((k, l))
 
+def undoMove_EVAL(userMove, cpc, dpc, boardState, BlackWhitePieces,evalPoints):
 
+    # current square, destination square, promotion
+    i, j, k, l, prom = userMove  # r,c,r,c,prom
+            
+    
+    boardState[i, j, :] = cpc  # current piece & color
+    c = cpc[1]
 
+    boardState[k, l, :] = dpc  # destination piece & color
+    dp = dpc[0]  # destination piece
+    dc = dpc[1]
+    
+    # evaluation
+    if dp != 0:
+        if c != dc:
+            evalPoints += pieceEval[(dp,dc)]
+    
+    # remove black/white piece from the list if on a current square
+    BlackWhitePieces[c].remove((k, l))
+
+    # adds black/white piece to the list if on a destination square
+    BlackWhitePieces[c].add((i, j))
+
+    if dp != 0:
+        BlackWhitePieces[1-c].add((k, l))
+     
+    return evalPoints
+        
 def king_in_check(boardState, color, positionKings, BlackWhitePieces):
 
     # opposite color from king
@@ -134,7 +208,7 @@ def checkLegal(userMove, boardState, color, positionKings, BlackWhitePieces):
         kingsExp = np.copy(positionKings)
         # piecesExp = copy.deepcopy(BlackWhitePieces)
         # expected board with last user input
-        cpc, dpc = movePiece(userMove, boardState, kingsExp, BlackWhitePieces)
+        cpc, dpc = movePiece(userMove,boardState,kingsExp,BlackWhitePieces)
        # print("after move: ")
         # printboard(boardState)
 
@@ -527,7 +601,7 @@ def generateLegal(piece, boardState, color, positionKings, BlackWhitePieces):
     kingsExp = np.copy(positionKings)
 
     for move in listMoves:
-        cpc, dpc = movePiece(move, boardState, kingsExp, BlackWhitePieces)
+        cpc, dpc = movePiece(move,boardState,kingsExp,BlackWhitePieces)
 
         # is king IN check?
         kingINcheck = king_in_check(

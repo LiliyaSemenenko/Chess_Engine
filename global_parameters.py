@@ -8,6 +8,13 @@ range_8 = range(8)
 # Dictionaries
 # =============================================================================
 
+# instead of 2*col - 1
+signCol = {
+    0: -1,
+    1: 1,
+    }
+
+
 # translating column letters to numbers
 columnNum = {
     "a": 0,
@@ -67,7 +74,6 @@ pieceEval = {
     (5, 1): 3,  # Knight
     (6, 1): 1,
 }
-
 
 gameStatus ={
     0: "play",

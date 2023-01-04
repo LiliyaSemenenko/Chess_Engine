@@ -7,18 +7,16 @@ import copy
 import collections
 
 # importing functions
-# from global_parameters import *
-# from ui import *
 from chessFunctions import *
 
 # =============================================================================
 # Parameters
 # =============================================================================
 
-depth = 2
+depth = 4
 engineColor = 1
 engineMode = "AB" # "AB", "MM" , "random"
-opponentMode = "random" # "user", "random"
+opponentMode = "ABd1" # "user", "random", "ABd1
 
 # =============================================================================
 # Main game execution loop
@@ -33,85 +31,42 @@ gameOver = False
 
 moveNumber = 1
 
-# # initialize king's position
-# positionKing_W = [7,4] # e1
-# positionKing_B = [0,4] # e8
-# # both kings in array -> black: bothKings[0], white: bothKings[1]
-# positionKings = [positionKing_B, positionKing_W] 
-
-
-# # MAKE A SET INSTEAD
-# # initialize pieces
-# BlackWhitePieces = [set(),set()]
-
-# for i in range(8): # rows
-#     for j in range(8): # columns
-#         if boardState[i,j,0] != 0:
-#             BlackWhitePieces[boardState[i,j,1]].add((i,j))
-
-
-
-# 0 = play
-# 1 = mate
-# 2 = draw by insufficient material
-# 3 = stalemate
-
-# gameStatus ={
-#     0: "play",
-#     1: "MATE",
-#     2: "DRAW by insufficient material",
-#     3: "STALEMATE",
-#     }
-
-# # promotion piece number
-# promotion = {
-#   "q": 2, 
-#   "r": 3, 
-#   "b": 4, 
-#   'n': 5, 
-# }
-
-#evaluation = 0
+evalPoints = 0
 
 # =============================================================================
 # =============================================================================
 # BRUTAL TESTING
 
-def TESTallLegal(boardState,color,positionKings,BlackWhitePieces):
+Emoves = 0
+TEtime = 0
 
-    listMoves = []    
-    
-    range_8 = range(8)
-    
-    listCol = BlackWhitePieces[color]
-    listOpp = BlackWhitePieces[1-color]
-    
-    for piece in listCol:
-        i,j = piece # i = 0, j = 1
-        moveC = str(numColumn[j]) + str(8-i)
-        
-        for pieceOpp in listOpp:
-            k,l = pieceOpp
-        # for k in range_8: # destination rows
-        #     for l in range_8: # columns
-        #         if (boardState[k,l,1] == (1-color)) or boardState[k,l,0] == 0:
-                    # locate the pieces of same color as the engine's turn
-            move = moveC + str(numColumn[l]) + str(8-k) 
-                    # a = 2+2
-                    # promotion pawns
-                    # if boardState[i,j,0] == 6 and ((i == 1 and k == 0) or (i == 6 and k == 7)):
-                        # for key in promotion.keys():
-                            # promMove = move + key
-                            
-                    #         if checkLegal(promMove,boardState,color,positionKings,BlackWhitePieces):
-                    #             listMoves.append(promMove)
-                
-                    # else:
-            if checkLegal(move,boardState,color,positionKings,BlackWhitePieces):
-                listMoves.append(move)
-                    
+###### bl: ABd1  VS  wh: AB depth=2
+# Number of moves:  55
+# AVG engine time:  1.2 
 
-    return listMoves
+###### bl: ABd1  VS  wh: AB depth=3
+# Number of moves:  17
+# AVG engine time:  13.5
+
+#--------------------------------------------
+# after sorting & move ordering improvement
+
+###### bl: ABd1  VS  wh: AB depth=2
+# Number of moves:  37
+# AVG engine time:  0.9 
+
+###### bl: ABd1  VS  wh: AB depth=3
+# Number of moves:  23
+# AVG engine time:  6.1
+
+###### bl: ABd1  VS  wh: AB depth=4
+# Number of moves:  43
+# AVG engine time: 38.3
+
+# RESULT: faster by a factor of 6
+
+#--------------------------------------------
+
 
 # BRUTAL TESTING
 # =============================================================================
@@ -209,7 +164,12 @@ while not gameOver: # while True
 
         if opponentMode == "random":
             userMove = (random.choices(legalMoves, k=1))[0]
-                
+        
+        if opponentMode == "ABd1":
+            userMove = alphabeta(boardState,color,positionKings,1,-np.Inf,np.Inf,BlackWhitePieces,evalPoints)[1]
+            
+            
+            
         print("")
         print("chosen move: ",moveTOstring(userMove))
         
@@ -218,23 +178,27 @@ while not gameOver: # while True
         start = time.time()
         
         if engineMode == "AB":
-            evalSc, userMove = alphabeta(boardState,color,positionKings,depth,-np.Inf,np.Inf,BlackWhitePieces)
+            evalSc, userMove = alphabeta(boardState,color,positionKings,depth,-np.Inf,np.Inf,BlackWhitePieces,evalPoints)
         if engineMode == "MM":
             evalSc, userMove = minimax(boardState,color,positionKings,depth,BlackWhitePieces)
         if engineMode == "random":
             userMove = (random.choices(legalMoves, k=1))[0]
         
         end = time.time()
-
-        print("engine time: ", end-start)
+        
+        Etime = end-start
+        print("engine time: ", Etime)
         print("userMove: ", userMove)
         print("chosen move: ",moveTOstring(userMove))
-        # print("eval score: ", evalSc)
-        
+        print("engine eval score: ", evalSc)
+        TEtime += Etime
+        Emoves += 1
+    
+    
+    
     
     # moves piece on the board & updates position kings after the move is made
-    movePiece(userMove,boardState,positionKings,BlackWhitePieces)
-    
+    cpc,dpc,evalPoints = movePiece_EVAL(userMove,boardState,positionKings,BlackWhitePieces,evalPoints)
     
 
     # start1 = time.time()
@@ -281,9 +245,19 @@ while not gameOver: # while True
     end2 = time.time()
     timeAVG = (end2-start2)/k
     print("\nEvaluation: ", evalt)
-    # #print("Eval time: ", end2-start2)
+
+    
+    
+    # print("New eval: ",evalPoints)
+    # print("")
+    # if round(evalPoints-evalt,10) != 0:
+    #     print("eval NOT same")
+    #     break
+    
     
     print("Avg Eval time: ", timeAVG)
+    
+    
     
     
     
@@ -324,9 +298,12 @@ while not gameOver: # while True
     moveNumber += 1
 
 # =============================================================================
+print("AVG engine time: ",TEtime/Emoves)
+         
 
-    
-            
+
+
+
     #     # 0 = play
     #     # 1 = mate
     #     # 2 = draw by insufficient material
