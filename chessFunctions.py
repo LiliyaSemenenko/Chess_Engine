@@ -253,68 +253,42 @@ def minimax(boardState, color, positionKings, depth, BlackWhitePieces):
         return min_evalScore, min_move
 
 
-def alphabeta(boardState, color, positionKings, depth, α, β, BlackWhitePieces,evalPoints):
+def negaAB(boardState, color, positionKings, depth, α, β, BlackWhitePieces,evalPoints):
 
     legalMoves = allLegal(boardState, color, positionKings, BlackWhitePieces)
 
     if depth == 0 or legalMoves == []:
-        return Eval(boardState, color, positionKings, BlackWhitePieces, legalMoves), None
+        return signCol[color]*Eval(boardState, color, positionKings, BlackWhitePieces, legalMoves), None
 
     legalMoves = orderMoves(boardState, positionKings,BlackWhitePieces, legalMoves,color)
 
-    if color == 1:  # white's move
+    max_evalScore = -np.Inf
+    max_move = None
 
-        max_evalScore = -np.Inf
-        max_move = None
+    for move in legalMoves:
+        #piecesExp = copy.deepcopy(BlackWhitePieces)
+        kingsExp = np.copy(positionKings)
 
-        for move in legalMoves:
-            #piecesExp = copy.deepcopy(BlackWhitePieces)
-            kingsExp = np.copy(positionKings)
+        # expected board with last user input
+        cpc, dpc, evalPoints = movePiece_EVAL(move, boardState, kingsExp, BlackWhitePieces,evalPoints)
+       
+        eval_of_move = -negaAB(
+            boardState, 1-color, kingsExp, depth-1, -β, -α, BlackWhitePieces,evalPoints)[0]
+        
+        evalPoints = undoMove_EVAL(move, cpc, dpc, boardState, BlackWhitePieces,evalPoints)
 
-            # expected board with last user input
-            cpc, dpc, evalPoints = movePiece_EVAL(move, boardState, kingsExp, BlackWhitePieces,evalPoints)
-            eval_of_move = alphabeta(
-                boardState, 1-color, kingsExp, depth-1, α, β, BlackWhitePieces,evalPoints)[0]
-            evalPoints = undoMove_EVAL(move, cpc, dpc, boardState, BlackWhitePieces,evalPoints)
+        if eval_of_move >= max_evalScore:
+            max_evalScore = eval_of_move
+            max_move = move
 
-            if eval_of_move >= max_evalScore:
-                max_evalScore = eval_of_move
-                max_move = move
+        # if max eval_Sc > a, then update alpha w/ max eval_Sc
+        # if the reverse, a stays the same
+        α = max(α, max_evalScore)
+        
+        if α >= β:
+            break
 
-            if max_evalScore > β:
-                break
-
-            # if max eval_Sc > a, then update alpha w/ max eval_Sc
-            # if the reverse, a stays the same
-            α = max(α, max_evalScore)
-
-        return max_evalScore, max_move
-
-    if color == 0:  # black's move
-
-        min_evalScore = np.Inf
-        min_move = None
-
-        for move in legalMoves:
-            #piecesExp = copy.deepcopy(BlackWhitePieces)
-            kingsExp = np.copy(positionKings)
-
-            # expected board with last user input
-            cpc, dpc, evalPoints = movePiece_EVAL(move, boardState, kingsExp, BlackWhitePieces,evalPoints)
-            eval_of_move = alphabeta(
-                boardState, 1-color, kingsExp, depth-1, α, β, BlackWhitePieces,evalPoints)[0]
-            evalPoints = undoMove_EVAL(move, cpc, dpc, boardState, BlackWhitePieces,evalPoints)
-
-            if eval_of_move <= min_evalScore:
-                min_evalScore = eval_of_move
-                min_move = move
-
-            if min_evalScore < α:
-                break
-
-            β = min(β, min_evalScore)
-
-        return min_evalScore, min_move
+    return max_evalScore, max_move
 
 # =====================================================================
 # Evaluation functions: sortingEval, Eval
@@ -393,12 +367,12 @@ def Eval(boardState, color, positionKings, BlackWhitePieces,legalMoves=None):
 
     # player's king in check
     if status == 4:
-        checkPoints = -(1e-5)*signCol[color]
+        checkPoints = -(1e-1)*signCol[color]
         sumPoints += checkPoints
 
     # opponent's king in check
     if status == 5:
-        OppCheckPoints = (1e-5)*signCol[color]
+        OppCheckPoints = (1e-1)*signCol[color]
         sumPoints += OppCheckPoints
 
     # total number of bl/wh pieces
@@ -414,20 +388,55 @@ def Eval(boardState, color, positionKings, BlackWhitePieces,legalMoves=None):
             # add points for moving pawn towards promotion
             if b[0] == 6 and i < 7:
                 if c == 0 and Npieces_BL < 12:  # black
-                    BLprom = -(1e-5)*(i-1)
+                    BLprom = -(1e-4)*(i-1)
                     sumPoints += BLprom
 
                 if c == 1 and Npieces_WH < 12:  # white
-                    WHprom = (1e-5)*(6-i)
+                    WHprom = (1e-4)*(6-i)
                     sumPoints += WHprom
 
             # add points for controlling center with pieces
             if i in range(2, 6) and j in range(2, 6) and b[0] != 0:
 
-                centerPoints = (1e-4)*signCol[c]
+                centerPoints = (1e-3)*signCol[c]
                 sumPoints += centerPoints
 
             # piece, color
             sumPoints += pieceEval[(b[0], b[1])]
 
     return sumPoints  # output evaluation score
+
+# TIME EVERYTHING in main loop
+def finalEval(boardState, color, positionKings, BlackWhitePieces,evalPoints,legalMoves=None):
+
+    # 0 = play
+    # 1 = mate
+    # 2 = draw by insufficient material
+    # 3 = stalemate
+    # 4 = player in check
+    # 5 = opponent in check
+
+    # checks for game status
+    status = DrawStalemateMate(boardState, color, positionKings, BlackWhitePieces, legalMoves)
+
+    if status == 1:
+        # black or white gets mated
+        evalPoints = (1 - 2*color)*np.Inf  # white or black wins
+        return evalPoints
+
+    if status == 2 or status == 3:
+        evalPoints = 0
+        return evalPoints
+
+    # player's king in check
+    if status == 4:
+        checkPoints = -(1e-1)*signCol[color]
+        evalPoints += checkPoints
+
+    # opponent's king in check
+    if status == 5:
+        OppCheckPoints = (1e-1)*signCol[color]
+        evalPoints += OppCheckPoints
+
+
+    return evalPoints  # output evaluation score

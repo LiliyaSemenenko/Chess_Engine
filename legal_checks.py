@@ -91,12 +91,27 @@ def movePiece_EVAL(userMove, boardState, positionKings,BlackWhitePieces,evalPoin
         if c != dc:
             evalPoints -= pieceEval[(dp,dc)]
     
-    # add points for controlling center with pieces
-    if (k > 1 and k < 6) and (l > 1 and l < 6):
+    evalPoints += (centerMatrix[k,l] - centerMatrix[i,j])*signCol[c]
+    
+    # deducts points for NOT controlling center after being eaten
+    if dp != 0:
+        evalPoints -= (centerMatrix[k,l])*signCol[1-c]
+            
+    
+    # # add points for controlling center with pieces
+    # if (k > 1 and k < 6) and (l > 1 and l < 6):
+        
+    #     # gives points for controlling center
+    #     centerPoints = (1e-4)*signCol[c] # Bl: 2*0-1 = -1, Wh: 2*1-1 = 1
+    #     evalPoints += centerPoints
 
-        centerPoints = (1e-4)*signCol[c] # Bl: 2*0-1 = -1, Wh: 2*1-1 = 1
-        evalPoints += centerPoints
-
+    #     # deducts points for NOT controlling center after being eaten
+    #     if dp != 0:
+    #         centerPoints = (1e-4)*signCol[1-c] # Bl:  = -1, Wh: 2*1-1 = 1
+    #         evalPoints -= centerPoints
+        
+        
+        
     # promotion
     if prom != 0:
         p = prom
@@ -146,11 +161,20 @@ def undoMove_EVAL(userMove, cpc, dpc, boardState, BlackWhitePieces,evalPoints):
     dp = dpc[0]  # destination piece
     dc = dpc[1]
     
+    #----------------------------------------
     # evaluation
     if dp != 0:
         if c != dc:
             evalPoints += pieceEval[(dp,dc)]
     
+    evalPoints -= (centerMatrix[k,l] - centerMatrix[i,j])*signCol[c]
+    
+    # deducts points for NOT controlling center after being eaten
+    if dp != 0:
+        evalPoints += (centerMatrix[k,l])*signCol[1-c]
+            
+     #----------------------------------------
+       
     # remove black/white piece from the list if on a current square
     BlackWhitePieces[c].remove((k, l))
 
@@ -162,6 +186,7 @@ def undoMove_EVAL(userMove, cpc, dpc, boardState, BlackWhitePieces,evalPoints):
      
     return evalPoints
         
+
 def king_in_check(boardState, color, positionKings, BlackWhitePieces):
 
     # opposite color from king
@@ -389,8 +414,8 @@ def generateLegal(piece, boardState, color, positionKings, BlackWhitePieces):
     ###### pawn moves ######
     if p == 6:
 
-        v_dir = -1*(2*color - 1)  # black: -1*(2*0 - 1) = 1
-                                    # white: -1*(2*1 - 1) = -1
+        v_dir = -signCol[color]      # black: -1*(2*0 - 1) = 1
+                                     # white: -1*(2*1 - 1) = -1
         
         ch1 = ch + v_dir
 
@@ -432,7 +457,7 @@ def generateLegal(piece, boardState, color, positionKings, BlackWhitePieces):
                 listMoves.append([ch, cv, ch1, cv-1, 0])
     
                 # promotion
-                if ch == 1 or ch == 6:
+                if (ch == 1 and color == 1) or (ch == 6 and color == 0):
                     for prom in [2, 3, 4, 5]:
                         listMoves.append([ch, cv, ch1, cv-1, prom])
     

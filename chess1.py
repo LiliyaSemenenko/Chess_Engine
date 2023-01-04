@@ -15,8 +15,8 @@ from chessFunctions import *
 
 depth = 4
 engineColor = 1
-engineMode = "AB" # "AB", "MM" , "random"
-opponentMode = "ABd1" # "user", "random", "ABd1
+engineMode = "NegaAB" # "NegaAB", "MM" , "random"
+opponentMode = "negaABd1" # "user", "random", "negaABd1
 
 # =============================================================================
 # Main game execution loop
@@ -37,6 +37,11 @@ evalPoints = 0
 # =============================================================================
 # BRUTAL TESTING
 
+# OBSERVATION:
+# 1) retarded moves from engine 
+# 2) as depth incr, numMoves increases
+# 3) runtime decreased :)
+    
 Emoves = 0
 TEtime = 0
 
@@ -64,8 +69,16 @@ TEtime = 0
 # AVG engine time: 38.3
 
 # RESULT: faster by a factor of 6
-
 #--------------------------------------------
+# after fixing retarded promotion
+
+###### bl: negaABd1  VS  wh: negaAB depth=2
+# AVG engine time:  0.35
+# Number of moves:  13
+
+###### bl: negaABd1  VS  wh: negaAB depth=3
+# AVG engine time:  
+# Number of moves:  
 
 
 # BRUTAL TESTING
@@ -165,9 +178,9 @@ while not gameOver: # while True
         if opponentMode == "random":
             userMove = (random.choices(legalMoves, k=1))[0]
         
-        if opponentMode == "ABd1":
-            userMove = alphabeta(boardState,color,positionKings,1,-np.Inf,np.Inf,BlackWhitePieces,evalPoints)[1]
-            
+        if opponentMode == "negaABd1":
+            userMove = negaAB(boardState,color,positionKings,1,-np.Inf,np.Inf,BlackWhitePieces,evalPoints)[1]
+            print("engine exp bl move: ",moveTOstring(negaAB(boardState, color, positionKings,depth-1,-np.Inf,np.Inf, BlackWhitePieces,evalPoints)[1]))
             
             
         print("")
@@ -177,10 +190,14 @@ while not gameOver: # while True
     else: 
         start = time.time()
         
-        if engineMode == "AB":
-            evalSc, userMove = alphabeta(boardState,color,positionKings,depth,-np.Inf,np.Inf,BlackWhitePieces,evalPoints)
+        if engineMode == "NegaAB":
+            evalSc, userMove = negaAB(boardState,color,positionKings,depth,-np.Inf,np.Inf,BlackWhitePieces,evalPoints)
+            print("engine eval score: ", evalSc)
+            
         if engineMode == "MM":
             evalSc, userMove = minimax(boardState,color,positionKings,depth,BlackWhitePieces)
+            print("engine eval score: ", evalSc)
+            
         if engineMode == "random":
             userMove = (random.choices(legalMoves, k=1))[0]
         
@@ -190,7 +207,6 @@ while not gameOver: # while True
         print("engine time: ", Etime)
         print("userMove: ", userMove)
         print("chosen move: ",moveTOstring(userMove))
-        print("engine eval score: ", evalSc)
         TEtime += Etime
         Emoves += 1
     
@@ -248,7 +264,9 @@ while not gameOver: # while True
 
     
     
-    # print("New eval: ",evalPoints)
+    print("evalPoints: ",evalPoints)
+    print("Fin eval: ",finalEval(boardState, color, positionKings, BlackWhitePieces,evalPoints,legalMoves))
+    print("Undo Fin eval: ",undoMove_EVAL(userMove, cpc, dpc, np.copy(boardState),copy.deepcopy(BlackWhitePieces),evalPoints))
     # print("")
     # if round(evalPoints-evalt,10) != 0:
     #     print("eval NOT same")
@@ -258,19 +276,7 @@ while not gameOver: # while True
     print("Avg Eval time: ", timeAVG)
     
     
-    
-    
-    
-    
-    # start1 = time.time()
-    # k = 100
-    # for i in range(k):
-    #     test = TESTallLegal(boardState,color,positionKings,BlackWhitePieces)
-    # end1 = time.time()
-    # timeAVG = (end1-start1)/k
-    # print("Avg TESTallLegal time: ", timeAVG)
 
-    
     # opposite color from king
     opColor = 1 - color
     
@@ -298,7 +304,7 @@ while not gameOver: # while True
     moveNumber += 1
 
 # =============================================================================
-print("AVG engine time: ",TEtime/Emoves)
+    print("AVG engine time: ",TEtime/Emoves)
          
 
 

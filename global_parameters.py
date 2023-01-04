@@ -1,8 +1,24 @@
+import numpy as np
+
 # =============================================================================
 # Parameters
 # =============================================================================
 
 range_8 = range(8)
+
+# =============================================================================
+# Piece-Square tables
+# =============================================================================
+
+# 2D matrix for center points
+centerMatrix = np.zeros((8, 8)) # dtype=int
+
+for i in range(8):
+    for j in range(8):
+        # add points for controlling center with pieces
+        if i in range(2, 6) and j in range(2, 6):
+            centerMatrix[i,j] = 1e-3
+
 
 # =============================================================================
 # Dictionaries
