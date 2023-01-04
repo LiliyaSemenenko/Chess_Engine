@@ -7,6 +7,8 @@ import copy
 import collections
 
 # importing functions
+# from global_parameters import *
+# from ui import *
 from chessFunctions import *
 
 # =============================================================================
@@ -22,7 +24,8 @@ opponentMode = "random" # "user", "random"
 # Main game execution loop
 # =============================================================================
 
-boardState = initialization()
+boardState, positionKings, BlackWhitePieces = initialization()
+
 print("")
 printboard(boardState)
 
@@ -30,41 +33,43 @@ gameOver = False
 
 moveNumber = 1
 
-# initialize king's position
-positionKing_W = [7,4] # e1
-positionKing_B = [0,4] # e8
-# both kings in array -> black: bothKings[0], white: bothKings[1]
-positionKings = [positionKing_B, positionKing_W] 
+# # initialize king's position
+# positionKing_W = [7,4] # e1
+# positionKing_B = [0,4] # e8
+# # both kings in array -> black: bothKings[0], white: bothKings[1]
+# positionKings = [positionKing_B, positionKing_W] 
 
 
-# MAKE A SET INSTEAD
-# initialize pieces
-BlackWhitePieces = [set(),set()]
+# # MAKE A SET INSTEAD
+# # initialize pieces
+# BlackWhitePieces = [set(),set()]
 
-for i in range(8): # rows
-    for j in range(8): # columns
-        if boardState[i,j,0] != 0:
-            BlackWhitePieces[boardState[i,j,1]].add((i,j))
+# for i in range(8): # rows
+#     for j in range(8): # columns
+#         if boardState[i,j,0] != 0:
+#             BlackWhitePieces[boardState[i,j,1]].add((i,j))
+
+
 
 # 0 = play
 # 1 = mate
 # 2 = draw by insufficient material
 # 3 = stalemate
 
-gameStatus ={
-    0: "play",
-    1: "MATE",
-    2: "DRAW by insufficient material",
-    3: "STALEMATE",
-    }
+# gameStatus ={
+#     0: "play",
+#     1: "MATE",
+#     2: "DRAW by insufficient material",
+#     3: "STALEMATE",
+#     }
 
-# promotion piece number
-promotion = {
-  "q": 2, 
-  "r": 3, 
-  "b": 4, 
-  'n': 5, 
-}
+# # promotion piece number
+# promotion = {
+#   "q": 2, 
+#   "r": 3, 
+#   "b": 4, 
+#   'n': 5, 
+# }
 
 #evaluation = 0
 
