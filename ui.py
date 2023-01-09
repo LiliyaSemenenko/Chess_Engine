@@ -67,10 +67,12 @@ def moveTOstring(userMove):
 def validInput(userMove):
 
     allR = [str(i) for i in range(1, 9)]  # "1" - "8"
+    
     if userMove == "r":
         return True
 
     elif len(userMove) == 4 or len(userMove) == 5:
+        
         letterC = userMove[0]
         rowC = userMove[1]
 
@@ -81,8 +83,10 @@ def validInput(userMove):
         destination = (letterD in columnNum.keys()) and (rowD in allR)
 
         if len(userMove) == 4:
+            # short castling
+                
             if current and destination:
-                return True
+                    return True
 
         elif len(userMove) == 5:
 
@@ -91,7 +95,8 @@ def validInput(userMove):
 
             if current and destination and promotionL:
                 return True
-
+        
+        
     else:
         return False
     
