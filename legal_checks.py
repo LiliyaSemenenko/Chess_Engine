@@ -208,41 +208,45 @@ def movePiece_EVAL(userMove, boardState, positionKings,BWpieces,evalPoints,castl
     dpc = np.copy(boardState[k, l, :])  # destination piece & color
     dc = boardState[k, l, 1]
     
+    #---------------------------------------
+    ### 
     if dp != 0:
         BWpieces[1-c].remove((k, l))
         
         
+    ### evaluation for eating a piece    
     if dp != 0:
-        # evaluation for eating a piece
         if c != dc:
             evalPoints -= pieceEval[(dp,dc)]
     
+    #---------------------------------------
+    ### evalPoints using Piece-Square tables
+    
+    numPieces = len(BWpieces[c])
+    
+    # MID game
+    if numPieces > 10:
+        table = pieceTable["m"][(p,c)]
+    
+    # END game
+    else:
+        table = pieceTable["e"][(p,c)]
     
     
-    evalPoints += (centerMatrix[k,l] - centerMatrix[i,j])*signCol[c]
+    # adds points for moving to a sqr
+    evalPoints += (table[k,l] - table[i,j])*signCol[c]
     
-    # deducts points from opponent for NOT controlling center after being eaten
+    # deducts Piece-Square points from opponent after being eaten
     if dp != 0:
-        evalPoints -= (centerMatrix[k,l])*signCol[1-c]
-            
-    
-    # # add points for controlling center with pieces
-    # if (k > 1 and k < 6) and (l > 1 and l < 6):
+        evalPoints -= (table[k,l])*signCol[1-c]
         
-    #     # gives points for controlling center
-    #     centerPoints = (1e-4)*signCol[c] # Bl: 2*0-1 = -1, Wh: 2*1-1 = 1
-    #     evalPoints += centerPoints
-
-    #     # deducts points for NOT controlling center after being eaten
-    #     if dp != 0:
-    #         centerPoints = (1e-4)*signCol[1-c] # Bl:  = -1, Wh: 2*1-1 = 1
-    #         evalPoints -= centerPoints
-
-    # promotion
+    #---------------------------------------
+    ### promotion
+    
     if prom != 0:
         p = prom
 
-    #------------------------
+    #---------------------------------------
     ### castling
     
     # king
@@ -359,7 +363,7 @@ def movePiece_EVAL(userMove, boardState, positionKings,BWpieces,evalPoints,castl
             if (k == 7 and l == 0): # a1R
                 castlingStatus[(k,l)] += 1
             
-    #------------------------
+    #---------------------------------------
     # boardstate update
     boardState[k, l, 0] = p
     boardState[k, l, 1] = c
@@ -532,19 +536,34 @@ def undoMove_EVAL(userMove, cpc, dpc, boardState, BWpieces,evalPoints,castlingSt
     dc = dpc[1]
     
     #----------------------------------------
-    ### undo evaluation
+    ### UNDO evaluation for eating opponent's pieces
     if dp != 0:
         if c != dc:
             evalPoints += pieceEval[(dp,dc)]
     
-    evalPoints -= (centerMatrix[k,l] - centerMatrix[i,j])*signCol[c]
+    #---------------------------------------
+    ### UNDO evalPoints using Piece-Square tables
     
-    # deducts points for NOT controlling center after being eaten
+    numPieces = len(BWpieces[c])
+    
+    # MID game
+    if numPieces > 10:
+        table = pieceTable["m"][(p,c)]
+    
+    # END game
+    else:
+        table = pieceTable["e"][(p,c)]
+    
+    
+    # adds points for moving to a sqr
+    evalPoints -= (table[k,l] - table[i,j])*signCol[c]
+    
+    # deducts Piece-Square points from opponent after being eaten
     if dp != 0:
-        evalPoints += (centerMatrix[k,l])*signCol[1-c]
-            
-    #----------------------------------------
-    ### undo BWPieces
+        evalPoints += (table[k,l])*signCol[1-c]
+        
+    #---------------------------------------
+    ### UNDO BWPieces
     
     # remove black/white piece from the list if on a current square
     BWpieces[c].remove((k, l))
@@ -556,7 +575,7 @@ def undoMove_EVAL(userMove, cpc, dpc, boardState, BWpieces,evalPoints,castlingSt
         BWpieces[1-c].add((k, l))
         
     #---------------------------
-    ### castling START
+    ### UNDO castling START
     
     # king
     if p == 1:
@@ -1038,60 +1057,6 @@ def generateLegal(piece, boardState, color, positionKings, BWpieces,castlingStat
             for move in CastlMove:
                 if positionLegal(move, boardState,color,BWpieces,castlingStatus):
                     listMoves.append(move)
-                    
-            
-      
-    # # current square
-    # ch, cv = piece
-    # p = boardState[ch, cv, 0]  # 6
-
-    # listMoves = []
-
-    # oppCol = 1-color
-                    
-                    
-    #========================================================================================
-    ###### king check ######
-    
-    
-    # positionLegal(userMove, boardState, color,BWpieces,castlingStatus)
-    
-    
-    # if p == 1:
-        
-    #     # (black & bl king moved = F) or (white & wh king moved = F)
-    #     if (color == 0 and castlingStatus[(0,4)] == 0) or (color == 1 and castlingStatus[(7,4)] == 0):
-
-    #         # short
-    #         if cv == 4 and dp == 0 and ch == dh:
-                
-    #             # short - right castling
-    #             if (color == 0 and castlingStatus[(0,7)] == 0) or (color == 1 and castlingStatus[(7,7)] == 0):       
-
-    #                 # dv = g and 1f = empty
-    #                 if dv == 6 and boardState[ch,5,0] == 0:
-    #                     bishopSquare = [[0,5],[7,5]]
-
-    #                     if not sqr_under_attack(boardState,color,bishopSquare[color],BWpieces,castlingStatus):
-    #                         knightSquare = [[0,6],[7,6]]
- 
-    #                         if not sqr_under_attack(boardState,color,knightSquare[color],BWpieces,castlingStatus):
-
-    #                             return True
-                            
-    #             # long - left castling
-    #             if (color == 0 and castlingStatus[(0,0)] == 0) or (color == 1 and castlingStatus[(7,0)] == 0):
-
-    #                 if dv == 2 and boardState[ch,3,0] == 0:
-    #                     bishopSquare = [[0,2],[7,2]]
-
-    #                     if not sqr_under_attack(boardState,color,bishopSquare[color],BWpieces,castlingStatus):
-    #                         queenSquare = [[0,3],[7,3]]
-
-    #                         if not sqr_under_attack(boardState,color,queenSquare[color],BWpieces,castlingStatus):
-
-    #                             return True 
-    #===============================================================================================
 
     ###### rook moves ###### & ###### queen moves ######
     if p == 3 or p == 2:

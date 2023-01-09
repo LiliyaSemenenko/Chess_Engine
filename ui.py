@@ -63,6 +63,26 @@ def moveTOstring(userMove):
 
     return userString
 
+def getUserInput(boardState, color, positionKings, BWpieces, castlingStatus):
+    
+    userString = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
+
+    # Legality check !!!!!!!!! FIX LEGAL INPUTS SHIT in validInput
+    while (not validInput(userString)) or (not checkLegal(stringTOmove(userString),boardState,color,positionKings,BWpieces,castlingStatus)): # while not True = False
+        print(Fore.RED  + "\nThat move was illegal."+ Fore.RESET)
+        print("")
+        printboard(boardState)
+        print("")
+        print(Fore.GREEN  + col," to move\n" + Fore.RESET)
+        userString = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
+        userMove = stringTOmove(userString)
+        print("")
+    
+    userMove = stringTOmove(userString)
+    
+    return userMove
+
+
 
 def validInput(userMove):
 

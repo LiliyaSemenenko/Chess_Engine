@@ -13,11 +13,11 @@ from chessFunctions import *
 # Parameters
 # =============================================================================
 
-depth = 3
+depth = 4
 
 # engine
 engineColor = 1
-engineMode = "negaAB" # "negaAB", "AB", "MM" , "random"
+engineMode = "AB" # "negaAB", "AB", "MM" , "random"
 
 # opponent
 opponentMode = "random" # "negaABd1", "ABd1", "user", "random"
@@ -28,7 +28,6 @@ opponentMode = "random" # "negaABd1", "ABd1", "user", "random"
     
 boardState, positionKings, BWpieces, castlingStatus, evalPoints = initialization()
 
-print("positionKings: ",positionKings)
 
 print("")
 printboard(boardState)
@@ -51,87 +50,6 @@ userMove2 = None
 Emoves = 0
 TEtime = 0
 
-###### bl: ABd1  VS  wh: AB depth= 2
-# Number of moves:  55
-# AVG engine time:  1.2 
-
-###### bl: ABd1  VS  wh: AB depth= 3
-# Number of moves:  17
-# AVG engine time:  13.5
-
-#--------------------------------------------
-# after sorting & move ordering improvement
-
-###### bl: ABd1  VS  wh: AB depth= 2
-# Number of moves:  37
-# AVG engine time:  0.9 
-
-###### bl: ABd1  VS  wh: AB depth= 3
-# Number of moves:  23
-# AVG engine time:  6.1
-
-###### bl: ABd1  VS  wh: AB depth= 4
-# Number of moves:  43
-# AVG engine time: 38.3
-
-# RESULT: faster by a factor of 6
-#--------------------------------------------
-# after fixing retarded promotion
-
-###### bl: negaABd1  VS  wh: negaAB depth= 2
-# Number of moves:  13
-# AVG engine time:  0.4
-
-###### bl: negaABd1  VS  wh: negaAB depth= 3
-# Number of moves:  63
-# AVG engine time:  5.3
-
-###### bl: negaABd1  VS  wh: negaAB depth= 4
-# Number of moves:  65
-# AVG engine time:  13.5
-
-# RESULT:
-    # 1) retarded moves from engine 
-    # 2) as depth incr, numMoves increases
-    # 3) runtime decreased :)
-    
-#--------------------------------------------           
-# NO evalPoints TEST                                    
-
-###### bl: negaABd1  VS  wh: negaAB depth= 2
-# Number of moves:  
-# AVG engine time:  
-
-###### bl: negaABd1  VS  wh: negaAB depth= 3
-# Number of moves:  63
-# AVG engine time:  5.6
-# Mistakes: h2h3 instead of eating pawn on d5 or c7
-# Move num:  9
-# Mate: rk+qn
-    
-###### bl: negaABd1  VS  wh: negaAB depth= 4
-# Number of moves:  
-# AVG engine time:  
-
-    #__________________________________________
-    # YES evalPoints TEST
-    ###### bl: negaABd1  VS  wh: negaAB depth= 3
-    # Number of moves:  63
-    # AVG engine time:  5.6
-    # Mistakes: h2h3 instead of eating pawn on d5 or c7
-    # Move num:  9
-    # Mate: rk+qn
-#--------------------------------------------
-# AB test, NO evalPoints
-
-###### bl: ABd1  VS  wh: AB depth= 3
-# Number of moves: 29
-# AVG engine time:  7.5
-# Mistakes: none
-# Move num:  
-# Mate: bs+qn
-
-
 # BRUTAL TESTING
 # =============================================================================
 # =============================================================================
@@ -144,20 +62,12 @@ while not gameOver: # while True
     # MAKE A DICTIONARY & remove from while !!!!!!!!!!!!!!
     # Current turn
     if color == 0: # even = black
-        col = "Black"
+        col = "\nBlack"
         
     else: # odd = white
-        col = "White"
+        col = "\nWhite"
         
-    print("\n",col," to move\n")
-    
-    ############################################################
-    # print("line 155")
-    # print("Wh pieces: ",BWpieces[1])
-    # print("Bl pieces: ",BWpieces[0])
-    
-    # printboard(boardState)
-    ############################################################
+    print(Fore.GREEN  + col," to move\n" + Fore.RESET)
     
     start1 = time.time()
     OLD_legalMoves = OLD_allLegal(boardState,color,positionKings,BWpieces,castlingStatus)
@@ -167,15 +77,7 @@ while not gameOver: # while True
     
     timeALL = end1-start1
     # print("OLD_legalMoves time: ", timeALL)
-    
-    ############################################################
-    # print("line 172")
-    # print("Wh pieces: ",BWpieces[1])
-    # print("Bl pieces: ",BWpieces[0])
-    
-    # printboard(boardState)
-    ############################################################
-    
+
     
     # start1 = time.time()
 
@@ -194,14 +96,6 @@ while not gameOver: # while True
     #print("allLegal time: ", timeALL)
     # print("")
     # print("num legalMoves: ",len(legalMoves))
-    
-    ############################################################
-    # print("line 199")
-    # print("Wh pieces: ",BWpieces[1])
-    # print("Bl pieces: ",BWpieces[0])
-    
-    # printboard(boardState)
-    ############################################################
 
 
     # lst1 = [moveTOstring(move) for move in OLD_legalMoves]
@@ -231,27 +125,6 @@ while not gameOver: # while True
     # opponent's turn
     if color == 1-engineColor: # black = 0, white = 1
         if opponentMode == "user" :
-            userString = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
-            
-            ############################################################
-            # print("line 220")
-            # print("Wh pieces: ",BWpieces[1])
-            # print("Bl pieces: ",BWpieces[0])
-            
-            # printboard(boardState)
-            ############################################################
-            
-
-            # Legality check !!!!!!!!! FIX LEGAL INPUTS SHIT in validInput
-            while (not validInput(userString)) or (not checkLegal(stringTOmove(userString),boardState,color,positionKings,BWpieces,castlingStatus)): # while not True = False
-                print(Fore.RED  + "\nThat move was illegal."+ Fore.RESET)
-                print("")
-                printboard(boardState)
-                print("")
-                print("\n",col," to move\n")
-                userString = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
-                userMove = stringTOmove(userString)
-                print("")
             
             # resign check
             if userString == "r":
@@ -259,9 +132,8 @@ while not gameOver: # while True
                 print("hehe bye loser")
                 break 
             
-            userMove = stringTOmove(userString)
+            userMove = getUserInput(boardState, color, positionKings, BWpieces, castlingStatus)
                 
-
         if opponentMode == "random":
             userMove = (random.choices(legalMoves, k=1))[0]
         
@@ -269,32 +141,23 @@ while not gameOver: # while True
             userMove = negaAB(boardState,color,positionKings,1,-np.Inf,np.Inf,BWpieces, evalPoints,castlingStatus)[1]
             print("YES EvalPts engine exp bl move: ",moveTOstring(negaAB(boardState, color, positionKings,depth-1,-np.Inf,np.Inf, BWpieces, evalPoints,castlingStatus)[1]))
             
-            
-            # TEST: no evalPoints & _EVAL in movePiece, undoMove
-            # userMove = negaAB(boardState,color,positionKings,1,-np.Inf,np.Inf,BWpieces)[1]
-            # print("NO EvalPts engine exp bl move: ",moveTOstring(negaAB(boardState, color, positionKings,depth-1,-np.Inf,np.Inf, BWpieces)[1]))
-
 
         if opponentMode == "ABd1":
             userMove = alphabeta(boardState, color, positionKings, 1, -np.Inf,np.Inf,BWpieces,castlingStatus)[1]
-            print("NO EvalPts engine exp bl move: ",moveTOstring(alphabeta(boardState, color, positionKings,depth-1,-np.Inf,np.Inf, BWpieces,castlingStatus)[1]))
+            print("engine exp bl move: ",moveTOstring(alphabeta(boardState, color, positionKings,depth-1,-np.Inf,np.Inf, BWpieces,evalPoints,castlingStatus)[1]))
             
-             
+        print("engine exp bl move: ",moveTOstring(alphabeta(boardState, color, positionKings,depth-1,-np.Inf,np.Inf, BWpieces,castlingStatus)[1]))    
         print("")
         print("chosen move: ",moveTOstring(userMove))
         
     # engine's turn
     else: 
+        ### time end
         start = time.time()
+        ### time end
         
         if engineMode == "negaAB":
             evalSc, userMove = negaAB(boardState,color,positionKings,depth,-np.Inf,np.Inf,BWpieces, evalPoints,castlingStatus)
-            
-            
-            # TEST: no evalPoints & _EVAL in movePiece, undoMove
-            # evalSc, userMove = negaAB(boardState,color,positionKings,depth,-np.Inf,np.Inf,BWpieces)
-            
-            
             
             print("engine eval score: ", evalSc)
             
@@ -305,33 +168,15 @@ while not gameOver: # while True
         if engineMode == "MM":
             evalSc, userMove = minimax(boardState,color,positionKings,depth,BWpieces,castlingStatus)
             print("engine eval score: ", evalSc)
-            
+        
+        ### time end
+        end = time.time()
+        ### time end
+        
         if engineMode == "random":
             userMove = (random.choices(legalMoves, k=1))[0]
         
         if opponentMode == "user" :
-            userString = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
-            
-            
-            ###################################33#######################
-            # print("line 297")
-            # print("Wh pieces: ",BWpieces[1])
-            # print("Bl pieces: ",BWpieces[0])
-            
-            # printboard(boardState)
-            ############################################################
-            
-            
-            # Legality check !!!!!!!!! FIX LEGAL INPUTS SHIT in validInput
-            while (not validInput(userString)) or (not checkLegal(stringTOmove(userString),boardState,color,positionKings,BWpieces,castlingStatus)): # while not True = False
-                print(Fore.RED  + "\nThat move was illegal."+ Fore.RESET)
-                print("")
-                printboard(boardState)
-                print("")
-                print("\n",col," to move\n")
-                userString = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
-                userMove = stringTOmove(userString)
-                print("")
             
             # resign check
             if userString == "r":
@@ -339,7 +184,7 @@ while not gameOver: # while True
                 print("hehe bye loser")
                 break 
             
-            userMove = stringTOmove(userString)
+            userMove = getUserInput(boardState, color, positionKings, BWpieces, castlingStatus)
             
         end = time.time()
         
@@ -359,45 +204,14 @@ while not gameOver: # while True
     
     # print("Wh pieces: ",BWpieces[1])
     # print("Bl pieces: ",BWpieces[0])
-    print("positionKings: ",positionKings)
-    
-    # castlingStatus = {
-    #     # black
-    #     "B_castled": False,
-    #     # (r,c)
-    #     (0,4): 0, # "e8K"  King
-    #     (0,7): 0, # "h8R"  short - right
-    #     (0,0): 0, # "a8R"  long - left
-
-    #     # white
-    #     "W_castled": False,
-    #     (7,4): 0, # "e1K"  King
-    #     (7,7): 0, # "h1R"  short - right
-    #     (7,0): 0, # "a1R"  long - left
-    #     }
-    
-    print("WH castled: ",castlingStatus[(1)])
-    print("WH king: ",castlingStatus[(7,4)])
-    print("WH rk right: ",castlingStatus[(7,7)])
-    print("WH rk left: ",castlingStatus[(7,0)])
-    print("")
-    print("BL castled: ",castlingStatus[(0)])
-    print("BL king: ",castlingStatus[(0,4)])
-    print("BL rk right: ",castlingStatus[(0,7)])
-    print("BL rk left: ",castlingStatus[(0,0)])
+    # print("positionKings: ",positionKings)
     
     
+    ### expected sequence of moves by the ENGINE
     
-    
-    
-    
-    
-    
-    
-    # if color == engineColor:
-    #     seq = moveSequence_negaAB(boardState,color,positionKings,depth,BWpieces,evalPoints,castlingStatus)
-            
-    #     print("exp next moves: ",([moveTOstring(move) for move in seq]))    
+    if color == engineColor:
+        seq = EXPmoveSequence(engineMode,boardState,color,positionKings,depth,BWpieces,evalPoints,castlingStatus)
+        print("exp next moves: ",([moveTOstring(move) for move in seq]))    
 
     # start1 = time.time()
     # k = 100
@@ -411,8 +225,6 @@ while not gameOver: # while True
                 
     # print("positionKings: ",positionKings)
     
-    
-    # castling check !!!!!!!!
     
     
 
@@ -490,19 +302,3 @@ while not gameOver: # while True
 # =============================================================================
 print("AVG engine time: ",TEtime/Emoves)
     
-    
-
-    # # short castling
-    # if userMove == 'e1g1': # white
-    #     movePiece('h1f1')
-        
-    # if userMove == 'e8g8': # black
-    #     movePiece('h8f8')
-
-    # # long castling
-    # if userMove == 'e1c1': # white
-    #     movePiece('a1d1')
-        
-    # if userMove == 'e8c8': # black
-    #     movePiece('a8d8')
-
