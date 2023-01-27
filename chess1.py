@@ -5,6 +5,9 @@ import random
 import time
 import copy
 import collections
+import matplotlib.pyplot as plt
+
+# plt.plot(x,y) (move number, evaluation)
 
 # importing functions
 from chessFunctions import *
@@ -13,14 +16,24 @@ from chessFunctions import *
 # Parameters
 # =============================================================================
 
-depth = 4
+stdin = input()
+nstr = '\\n'
+
+if stdin == 'uci\\n':
+    print('id name Liliya_Bot')
+    send('id name Liliya_Bot')
+    send('id author Liliya Semenenko <liliyasemenenko99@gmail.com>')
+    send('uciok')
+
+
+depth = 3
 
 # engine
-engineColor = 1
+engineColor = 0
 engineMode = "AB" # "negaAB", "AB", "MM" , "random"
 
 # opponent
-opponentMode = "random" # "negaABd1", "ABd1", "user", "random"
+opponentMode = "user" # "negaABd1", "ABd1", "user", "random"
 
 # =============================================================================
 # Main game execution loop
@@ -40,6 +53,12 @@ userMove2 = None
 # =============================================================================
 # =============================================================================
 # BRUTAL TESTING
+
+# try catch 
+# total num of games vs number of moves it took
+
+
+
 
 # TOP ISSUES:
     # 1) retarded moves from engine 
@@ -126,11 +145,11 @@ while not gameOver: # while True
     if color == 1-engineColor: # black = 0, white = 1
         if opponentMode == "user" :
             
-            # resign check
-            if userString == "r":
-                gameOver = True
-                print("hehe bye loser")
-                break 
+            # # resign check
+            # if userString == "r":
+            #     gameOver = True
+            #     print("hehe bye loser")
+            #     break 
             
             userMove = getUserInput(boardState, color, positionKings, BWpieces, castlingStatus)
                 
@@ -138,15 +157,15 @@ while not gameOver: # while True
             userMove = (random.choices(legalMoves, k=1))[0]
         
         if opponentMode == "negaABd1":
-            userMove = negaAB(boardState,color,positionKings,1,-np.Inf,np.Inf,BWpieces, evalPoints,castlingStatus)[1]
-            print("YES EvalPts engine exp bl move: ",moveTOstring(negaAB(boardState, color, positionKings,depth-1,-np.Inf,np.Inf, BWpieces, evalPoints,castlingStatus)[1]))
+            userMove = negaAB(boardState,color,positionKings,1,-MATE_EVALSCORE,MATE_EVALSCORE,BWpieces, evalPoints,castlingStatus)[1]
+            print("YES EvalPts engine exp bl move: ",moveTOstring(negaAB(boardState, color, positionKings,depth-1,-MATE_EVALSCORE,MATE_EVALSCORE, BWpieces, evalPoints,castlingStatus)[1]))
             
 
         if opponentMode == "ABd1":
-            userMove = alphabeta(boardState, color, positionKings, 1, -np.Inf,np.Inf,BWpieces,castlingStatus)[1]
-            print("engine exp bl move: ",moveTOstring(alphabeta(boardState, color, positionKings,depth-1,-np.Inf,np.Inf, BWpieces,evalPoints,castlingStatus)[1]))
+            userMove = alphabeta(boardState, color, positionKings, 1, -MATE_EVALSCORE,MATE_EVALSCORE,BWpieces,castlingStatus)[1]
+            print("engine exp bl move: ",moveTOstring(alphabeta(boardState, color, positionKings,depth-1,-MATE_EVALSCORE,MATE_EVALSCORE, BWpieces,evalPoints,castlingStatus)[1]))
             
-        print("engine exp bl move: ",moveTOstring(alphabeta(boardState, color, positionKings,depth-1,-np.Inf,np.Inf, BWpieces,castlingStatus)[1]))    
+        print("engine exp bl move: ",moveTOstring(alphabeta(boardState, color, positionKings,depth-1,-MATE_EVALSCORE,MATE_EVALSCORE, BWpieces,castlingStatus)[1]))    
         print("")
         print("chosen move: ",moveTOstring(userMove))
         
@@ -157,12 +176,12 @@ while not gameOver: # while True
         ### time end
         
         if engineMode == "negaAB":
-            evalSc, userMove = negaAB(boardState,color,positionKings,depth,-np.Inf,np.Inf,BWpieces, evalPoints,castlingStatus)
+            evalSc, userMove = negaAB(boardState,color,positionKings,depth,-MATE_EVALSCORE,MATE_EVALSCORE,BWpieces, evalPoints,castlingStatus)
             
             print("engine eval score: ", evalSc)
             
         if engineMode == "AB":
-            evalSc, userMove = alphabeta(boardState, color, positionKings, depth, -np.Inf,np.Inf, BWpieces,castlingStatus)
+            evalSc, userMove = alphabeta(boardState, color, positionKings, depth, -MATE_EVALSCORE,MATE_EVALSCORE, BWpieces,castlingStatus)
             print("engine eval score: ", evalSc)
             
         if engineMode == "MM":
@@ -176,13 +195,13 @@ while not gameOver: # while True
         if engineMode == "random":
             userMove = (random.choices(legalMoves, k=1))[0]
         
-        if opponentMode == "user" :
+        if engineMode == "user" :
             
-            # resign check
-            if userString == "r":
-                gameOver = True
-                print("hehe bye loser")
-                break 
+            # # resign check
+            # if userString == "r":
+            #     gameOver = True
+            #     print("hehe bye loser")
+            #     break 
             
             userMove = getUserInput(boardState, color, positionKings, BWpieces, castlingStatus)
             
@@ -238,9 +257,6 @@ while not gameOver: # while True
     #     break
     # # TEST
     
-    
-    
-    
     # legalMoves = allLegal(boardState,color,positionKings,BWpieces)
 
     evalt = None
@@ -258,11 +274,11 @@ while not gameOver: # while True
 
     
     print("evalPoints: ",evalPoints)
-    print("Fin eval: ",finalEval(boardState, color, positionKings, BWpieces,evalPoints,castlingStatus,legalMoves))
-    bfrMove = finalEval(boardState, color, positionKings, BWpieces,evalPoints,castlingStatus,legalMoves)
-    print("Undo Fin eval: ",undoMove_EVAL(userMove, cpc, dpc, np.copy(boardState),copy.deepcopy(BWpieces),evalPoints,copy.deepcopy(castlingStatus)))
-    aftrMove = undoMove_EVAL(userMove, cpc, dpc, np.copy(boardState),copy.deepcopy(BWpieces),evalPoints,copy.deepcopy(castlingStatus))
-    print("Points diff: ",bfrMove - aftrMove)
+    # print("Fin eval: ",finalEval(boardState, color, positionKings, BWpieces,evalPoints,castlingStatus,legalMoves))
+    # bfrMove = finalEval(boardState, color, positionKings, BWpieces,evalPoints,castlingStatus,legalMoves)
+    # print("Undo Fin eval: ",undoMove_EVAL(userMove, cpc, dpc, np.copy(boardState),copy.deepcopy(BWpieces),evalPoints,copy.deepcopy(castlingStatus)))
+    # aftrMove = undoMove_EVAL(userMove, cpc, dpc, np.copy(boardState),copy.deepcopy(BWpieces),evalPoints,copy.deepcopy(castlingStatus))
+    # print("Points diff: ",bfrMove - aftrMove)
     # print("")
     # if round(evalPoints-evalt,10) != 0:
     #     print("eval NOT same")

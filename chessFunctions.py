@@ -9,6 +9,9 @@ from legal_checks import *
 from ui import *
 
 # print(dir(legal_checks))
+
+import logging
+logger = logging.getLogger(__name__)
 # =============================================================================
 # Piece initialization function
 # =============================================================================
@@ -101,8 +104,6 @@ def initialization():
 
 def OLD_allLegal(boardState, color, positionKings, BWpieces,castlingStatus):
 
-    
-    
     listMoves = []
 
     listCol = BWpieces[color]
@@ -240,7 +241,7 @@ def minimax(boardState, color, positionKings, depth, BWpieces):
 
     if color == 1:  # white's move
 
-        max_evalScore = -np.Inf
+        max_evalScore = -MATE_EVALSCORE
         max_move = None
 
         for move in legalMoves:
@@ -260,7 +261,7 @@ def minimax(boardState, color, positionKings, depth, BWpieces):
 
     if color == 0:  # black's move
 
-        min_evalScore = np.Inf
+        min_evalScore = MATE_EVALSCORE
         min_move = None
 
         for move in legalMoves:
@@ -287,7 +288,7 @@ def minimax(boardState, color, positionKings, depth, BWpieces):
 
 #     legalMoves = orderMoves(boardState, positionKings,BWpieces, legalMoves,color)
 
-#     max_evalScore = -np.Inf
+#     max_evalScore = -MATE_EVALSCORE
 #     max_move = None
 
 #     for move in legalMoves:
@@ -325,7 +326,7 @@ def EXPmoveSequence(algo,boardState_,color,positionKings_,depth,BWpieces_,evalPo
     BWpieces = copy.deepcopy(BWpieces_)
     castlingStatus = copy.deepcopy(castlingStatus_)
     
-    α,β, = -np.Inf,np.Inf 
+    α,β, = -MATE_EVALSCORE,MATE_EVALSCORE 
     
     
     for i in reversed(range(1,depth)):  
@@ -358,7 +359,7 @@ def negaAB(boardState, color, positionKings, depth, α, β, BWpieces, evalPoints
 
     legalMoves = orderMoves(boardState, positionKings,BWpieces, legalMoves,color,castlingStatus)
 
-    max_evalScore = -np.Inf
+    max_evalScore = -MATE_EVALSCORE
     max_move = None
 
     for move in legalMoves:
@@ -393,14 +394,14 @@ def alphabeta(boardState, color, positionKings, depth, α, β, BWpieces,castling
     legalMoves = allLegal(boardState, color, positionKings, BWpieces,castlingStatus)
 
     if depth == 0 or legalMoves == []:
-        return Eval(boardState, color, positionKings, BWpieces,castlingStatus, legalMoves), None
+        # add bonus for checkmating in less than max depth
+        return 1e-6*depth*(signCol[1-color]) + Eval(boardState, color, positionKings, BWpieces,castlingStatus, legalMoves), None
 
-    legalMoves = orderMoves(boardState, positionKings,
-                            BWpieces, legalMoves,color,castlingStatus)
+    legalMoves = orderMoves(boardState, positionKings, BWpieces, legalMoves,color,castlingStatus)
 
     if color == 1:  # white's move
 
-        max_evalScore = -np.Inf
+        max_evalScore = -MATE_EVALSCORE
         max_move = None
 
         for move in legalMoves:
@@ -409,6 +410,7 @@ def alphabeta(boardState, color, positionKings, depth, α, β, BWpieces,castling
             
             # expected board with last user input
             cpc, dpc = movePiece(move, boardState, kingsExp, BWpieces,castlingStatus)
+            
             eval_of_move = alphabeta(
                 boardState, 1-color, kingsExp, depth-1, α, β, BWpieces,castlingStatus)[0]
             
@@ -429,17 +431,19 @@ def alphabeta(boardState, color, positionKings, depth, α, β, BWpieces,castling
 
     if color == 0:  # black's move
 
-        min_evalScore = np.Inf
+        min_evalScore = MATE_EVALSCORE
         min_move = None
 
         for move in legalMoves:
-            #piecesExp = copy.deepcopy(BWpieces)
+            
             kingsExp = np.copy(positionKings)
             
             # expected board with last user input
             cpc, dpc = movePiece(move, boardState, kingsExp, BWpieces,castlingStatus)
+            
             eval_of_move = alphabeta(
                 boardState, 1-color, kingsExp, depth-1, α, β, BWpieces,castlingStatus)[0]
+            
             undoMove(move, cpc, dpc, boardState, BWpieces,castlingStatus)
 
             if eval_of_move <= min_evalScore:
@@ -452,7 +456,75 @@ def alphabeta(boardState, color, positionKings, depth, α, β, BWpieces,castling
             β = min(β, min_evalScore)
 
         return min_evalScore, min_move
-    
+
+# original AB ##########################################################################################
+
+# def alphabeta(boardState, color, positionKings, depth, α, β, BWpieces,castlingStatus):
+
+#     legalMoves = allLegal(boardState, color, positionKings, BWpieces,castlingStatus)
+
+#     if depth == 0 or legalMoves == []:
+#         return Eval(boardState, color, positionKings, BWpieces,castlingStatus, legalMoves), None
+
+#     legalMoves = orderMoves(boardState, positionKings,
+#                             BWpieces, legalMoves,color,castlingStatus)
+
+#     if color == 1:  # white's move
+
+#         max_evalScore = -MATE_EVALSCORE
+#         max_move = None
+
+#         for move in legalMoves:
+
+#             kingsExp = np.copy(positionKings)
+            
+#             # expected board with last user input
+#             cpc, dpc = movePiece(move, boardState, kingsExp, BWpieces,castlingStatus)
+#             eval_of_move = alphabeta(
+#                 boardState, 1-color, kingsExp, depth-1, α, β, BWpieces,castlingStatus)[0]
+            
+#             undoMove(move, cpc, dpc, boardState, BWpieces,castlingStatus)
+
+#             if eval_of_move >= max_evalScore:
+#                 max_evalScore = eval_of_move
+#                 max_move = move
+
+#             if max_evalScore > β:
+#                 break
+
+#             # if max eval_Sc > a, then update alpha w/ max eval_Sc
+#             # if the reverse, a stays the same
+#             α = max(α, max_evalScore)
+
+#         return max_evalScore, max_move
+
+#     if color == 0:  # black's move
+
+#         min_evalScore = MATE_EVALSCORE
+#         min_move = None
+
+#         for move in legalMoves:
+#             #piecesExp = copy.deepcopy(BWpieces)
+#             kingsExp = np.copy(positionKings)
+            
+#             # expected board with last user input
+#             cpc, dpc = movePiece(move, boardState, kingsExp, BWpieces,castlingStatus)
+#             eval_of_move = alphabeta(
+#                 boardState, 1-color, kingsExp, depth-1, α, β, BWpieces,castlingStatus)[0]
+#             undoMove(move, cpc, dpc, boardState, BWpieces,castlingStatus)
+
+#             if eval_of_move <= min_evalScore:
+#                 min_evalScore = eval_of_move
+#                 min_move = move
+
+#             if min_evalScore < α:
+#                 break
+
+#             β = min(β, min_evalScore)
+
+#         return min_evalScore, min_move    
+
+# AB w/ evalPoints, MP_EVAL, and UM_EVAL ##########################################################################################
     
 # def alphabeta(boardState, color, positionKings, depth, α, β, BWpieces,evalPoints,castlingStatus):
 
@@ -466,7 +538,7 @@ def alphabeta(boardState, color, positionKings, depth, α, β, BWpieces,castling
 
 #     if color == 1:  # white's move
 
-#         max_evalScore = -np.Inf
+#         max_evalScore = -MATE_EVALSCORE
 #         max_move = None
 
 #         for move in legalMoves:
@@ -495,7 +567,7 @@ def alphabeta(boardState, color, positionKings, depth, α, β, BWpieces,castling
 
 #     if color == 0:  # black's move
 
-#         min_evalScore = np.Inf
+#         min_evalScore = MATE_EVALSCORE
 #         min_move = None
 
 #         for move in legalMoves:
@@ -573,7 +645,7 @@ def Eval(boardState, color, positionKings, BWpieces,castlingStatus,legalMoves=No
 
     if status == 1:
         # black or white gets mated
-        return (1 - 2*color)*np.Inf  # white or black wins
+        return (1 - 2*color)*MATE_EVALSCORE  # white or black wins
 
     if status == 2 or status == 3:
         return 0
@@ -637,7 +709,7 @@ def finalEval(boardState, color, positionKings, BWpieces,evalPoints,castlingStat
 
     if status == 1:
         # black or white gets mated
-        return (1 - 2*color)*np.Inf  # white or black wins
+        return (1 - 2*color)*MATE_EVALSCORE  # white or black wins
 
     if status == 2 or status == 3:
         return 0

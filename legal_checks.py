@@ -6,6 +6,8 @@ import copy
 # importing functions
 from global_parameters import *
 
+import logging
+logger = logging.getLogger(__name__)
 # =============================================================================
 # Functions: movePiece, undoMove, positionLegal, sqr_under_attack, generateLegal 
 # =============================================================================

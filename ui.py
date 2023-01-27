@@ -5,8 +5,10 @@ import copy
 
 # importing functions
 from global_parameters import *
+from legal_checks import *
 
-
+import logging
+logger = logging.getLogger(__name__)
 # =============================================================================
 # Functions: printboard, stringTOmove, moveTOstring, validInput
 # =============================================================================
@@ -55,6 +57,9 @@ def stringTOmove(userString):
 
 
 def moveTOstring(userMove):
+
+    if userMove is None: # checks of the type None
+        return "None"
 
     userString = numColumn[userMove[1]] + str(8-userMove[0]) + numColumn[userMove[3]] + str(8-userMove[2])
 
