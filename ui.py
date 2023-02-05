@@ -2,13 +2,12 @@ import numpy as np
 import random
 import time
 import copy
+from colorama import Fore
 
 # importing functions
 from global_parameters import *
 from legal_checks import *
 
-import logging
-logger = logging.getLogger(__name__)
 # =============================================================================
 # Functions: printboard, stringTOmove, moveTOstring, validInput
 # =============================================================================
@@ -78,6 +77,12 @@ def getUserInput(boardState, color, positionKings, BWpieces, castlingStatus):
         print("")
         printboard(boardState)
         print("")
+        
+        if color == 0: # even = black
+            col = "\nBlack"
+        else: # odd = white
+            col = "\nWhite"
+            
         print(Fore.GREEN  + col," to move\n" + Fore.RESET)
         userString = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
         userMove = stringTOmove(userString)
