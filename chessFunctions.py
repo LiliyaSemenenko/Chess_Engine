@@ -82,55 +82,19 @@ def initialization():
         (7,0): 0, # "a1R"  long - left
         }
     
+    moveCol = {
+        0:"Black",
+        1:"White",
+        }
+    
     evalPoints = 0
     
     
-    return boardState, positionKings, BWpieces, castlingStatus, evalPoints
-
-
-# array slicing
-# print(boardState[:,:,0]) # 2D chess ids
-# print(boardState[:,:,1]) # 2D colors (0: black, 1:white)
+    return boardState, positionKings, BWpieces, castlingStatus, evalPoints, moveCol
 
 # =============================================================================
-# Functions: OLD_allLegal, allLegal, DrawStalemateMate
+# Legality functions: allLegal, DrawStalemateMate
 # =============================================================================
-
-#OAL##########################################################################################
-
-def OLD_allLegal(boardState, color, positionKings, BWpieces,castlingStatus):
-
-    listMoves = []
-
-    listCol = BWpieces[color]
-    oppColor = 1-color
-
-    move = np.zeros(5, dtype=int)
-    for piece in copy.copy(listCol):
-        i, j = piece  # i = 0, j = 1
-        move[0:2] = piece
-
-        for k in range_8:  # destination rows
-            for l in range_8:  # columns
-                if (boardState[k, l, 1] == oppColor) or boardState[k, l, 0] == 0:
-                    # locate the pieces of same color as the engine's turn
-                    move[2:4] = [k, l]
-
-                    # promotion pawns
-                    if boardState[i, j, 0] == 6 and ((i == 1 and k == 0) or (i == 6 and k == 7)):
-                        for prom in [2, 3, 4, 5]:
-                            move[4] = prom
-
-                            if checkLegal(move, boardState, color, positionKings, BWpieces,castlingStatus):
-                                # !!!! fix this
-                                listMoves.append(np.copy(move))
-
-                    else:
-                        move[4] = 0
-                        if checkLegal(move, boardState, color, positionKings, BWpieces,castlingStatus):
-                            listMoves.append(np.copy(move))
-
-    return listMoves
 
 #AL##########################################################################################
 
@@ -199,9 +163,8 @@ def DrawStalemateMate(boardState,color,positionKings,BWpieces,castlingStatus,leg
 
     return 0
 
-
 # =====================================================================
-# Decision functions: move ordering, minimax, alphabeta pruning
+# Decision functions
 # =====================================================================
 
 #OM##########################################################################################
@@ -244,11 +207,9 @@ def orderMoves_EVAL(boardState, positionKings, BWpieces, legalMoves,color, evalP
 
     if color == 1: # white
         sortedMoves = [legalMoves[i] for i in np.argsort(evalList)[::-1]]
-        # sortedMoves = [legalMoves[i] for i in np.argsort(evalList)]
                        
     else: # black
         sortedMoves = [legalMoves[i] for i in np.argsort(evalList)]
-        # sortedMoves = [legalMoves[i] for i in np.argsort(evalList)[::-1]]
         
     return sortedMoves
     
@@ -269,9 +230,11 @@ def minimax(boardState, color, positionKings, depth, BWpieces):
         for move in legalMoves:
             piecesExp = copy.deepcopy(BWpieces)
             kingsExp = np.copy(positionKings)
+            
             # expected board with last user input
             boardExp = movePiece(move, np.copy(
                 boardState), kingsExp, piecesExp,evalPoints)
+            
             eval_of_move = minimax(
                 boardExp, 1-color, kingsExp, depth-1, piecesExp)[0]
 
@@ -289,9 +252,11 @@ def minimax(boardState, color, positionKings, depth, BWpieces):
         for move in legalMoves:
             piecesExp = copy.deepcopy(BWpieces)
             kingsExp = np.copy(positionKings)
+            
             # expected board with last user input
             boardExp = movePiece(move, np.copy(
                 boardState), kingsExp, piecesExp,evalPoints)
+            
             eval_of_move = minimax(
                 boardExp, 1-color, kingsExp, depth-1, piecesExp)[0]
 
@@ -301,44 +266,7 @@ def minimax(boardState, color, positionKings, depth, BWpieces):
 
         return min_evalScore, min_move
 
-# def negaAB(boardState, color, positionKings, depth, α, β, BWpieces):
-
-#     legalMoves = allLegal(boardState, color, positionKings, BWpieces)
-
-#     if depth == 0 or legalMoves == []:
-#         return signCol[color]*Eval(boardState, color, positionKings, BWpieces, legalMoves), None
-
-#     legalMoves = orderMoves(boardState, positionKings,BWpieces, legalMoves,color)
-
-#     max_evalScore = -MATE_EVALSCORE
-#     max_move = None
-
-#     for move in legalMoves:
-#         #piecesExp = copy.deepcopy(BWpieces)
-#         kingsExp = np.copy(positionKings)
-
-#         # expected board with last user input
-#         cpc, dpc = movePiece(move, boardState, kingsExp, BWpieces)
-
-#         eval_of_move = -negaAB(
-#             boardState, 1-color, kingsExp, depth-1, -β, -α, BWpieces)[0]
-        
-#         undoMove(move, cpc, dpc, boardState, BWpieces)
-
-#         if eval_of_move >= max_evalScore:
-#             max_evalScore = eval_of_move
-#             max_move = move
-
-#         # if max eval_Sc > a, then update alpha w/ max eval_Sc
-#         # if the reverse, a stays the same
-#         α = max(α, max_evalScore)
-        
-#         if α >= β:
-#             break
-
-#     return max_evalScore, max_move
-
-#MSNAB##########################################################################################
+#EMS##########################################################################################
 
 def EXPmoveSequence(algo,boardState_,color,positionKings_,depth,BWpieces_,evalPoints,castlingStatus_):
     
@@ -349,7 +277,6 @@ def EXPmoveSequence(algo,boardState_,color,positionKings_,depth,BWpieces_,evalPo
     castlingStatus = copy.deepcopy(castlingStatus_)
     
     α,β, = -MATE_EVALSCORE,MATE_EVALSCORE 
-    
     
     for i in reversed(range(1,depth)):  
         color = 1 - color
@@ -372,46 +299,6 @@ def EXPmoveSequence(algo,boardState_,color,positionKings_,depth,BWpieces_,evalPo
         movePiece_EVAL(move,boardState,positionKings,BWpieces,evalPoints,castlingStatus)
         
     return sequence
-
-#NAB#########################################################################################
-
-
-def negaAB(boardState, color, positionKings, depth, α, β, BWpieces, evalPoints,castlingStatus):
-
-    legalMoves = allLegal(boardState, color, positionKings, BWpieces,castlingStatus)
-
-    if depth == 0 or legalMoves == []:
-        return signCol[color]*Eval(boardState, color, positionKings, BWpieces,castlingStatus, legalMoves), None
-
-    legalMoves = orderMoves(boardState, positionKings,BWpieces, legalMoves,color,castlingStatus)
-
-    max_evalScore = -MATE_EVALSCORE
-    max_move = None
-
-    for move in legalMoves:
-
-        kingsExp = np.copy(positionKings)
-        
-        # expected board with last user input
-        cpc, dpc, evalPoints = movePiece_EVAL(move, boardState, kingsExp, BWpieces,evalPoints,castlingStatus)
-
-        eval_of_move = -negaAB(
-            boardState, 1-color, kingsExp, depth-1, -β, -α, BWpieces, evalPoints,castlingStatus)[0]
-        
-        evalPoints = undoMove_EVAL(move, cpc, dpc, boardState, BWpieces,evalPoints,castlingStatus)
-
-        if eval_of_move >= max_evalScore:
-            max_evalScore = eval_of_move
-            max_move = move
-
-        # if max eval_Sc > a, then update alpha w/ max eval_Sc
-        # if the reverse, a stays the same
-        α = max(α, max_evalScore)
-        
-        if α >= β:
-            break
-
-    return max_evalScore, max_move
 
 #AB##########################################################################################
 
@@ -492,10 +379,10 @@ def alphabeta_EVAL(boardState, color, positionKings, depth, α, β, BWpieces,eva
     if depth == 0 or legalMoves == []:
         # add bonus for checkmating in less than max depth
         return 1e-6*depth*(signCol[1-color]) + finalEval(boardState, color, positionKings, BWpieces,castlingStatus,evalPoints,legalMoves), None
-    # print("hi 1: ",evalPoints)
+ 
     legalMoves = orderMoves_EVAL(boardState, positionKings, BWpieces, legalMoves,color,evalPoints,castlingStatus)
 
-    if color == 1:  # white's move
+    if color == 1:  # white's move (maximizing player)
 
         max_evalScore = -MATE_EVALSCORE
         max_move = None
@@ -504,15 +391,13 @@ def alphabeta_EVAL(boardState, color, positionKings, depth, α, β, BWpieces,eva
 
             kingsExp = np.copy(positionKings)
             
-            # print("hi 2: ",evalPoints)
             # expected board with last user input
             cpc, dpc, evalPoints = movePiece_EVAL(move, boardState, kingsExp, BWpieces,evalPoints, castlingStatus)
-            # print("hi 3: ",evalPoints)
+            
             eval_of_move = alphabeta_EVAL(
                 boardState, 1-color, kingsExp, depth-1, α, β, BWpieces,evalPoints,castlingStatus)[0]
             
             evalPoints = undoMove_EVAL(move, cpc, dpc, boardState, BWpieces,evalPoints,castlingStatus)
-            # print("hi 4: ",evalPoints)
             
             if eval_of_move >= max_evalScore:
                 max_evalScore = eval_of_move
@@ -527,7 +412,7 @@ def alphabeta_EVAL(boardState, color, positionKings, depth, α, β, BWpieces,eva
 
         return max_evalScore, max_move
 
-    if color == 0:  # black's move
+    if color == 0:  # black's move (minimizing player)
 
         min_evalScore = MATE_EVALSCORE
         min_move = None
@@ -554,77 +439,9 @@ def alphabeta_EVAL(boardState, color, positionKings, depth, α, β, BWpieces,eva
             β = min(β, min_evalScore)
 
         return min_evalScore, min_move
-    
-# original AB ##########################################################################################
-
-# def alphabeta(boardState, color, positionKings, depth, α, β, BWpieces,castlingStatus):
-
-#     legalMoves = allLegal(boardState, color, positionKings, BWpieces,castlingStatus)
-
-#     if depth == 0 or legalMoves == []:
-#         return Eval(boardState, color, positionKings, BWpieces,castlingStatus, legalMoves), None
-
-#     legalMoves = orderMoves(boardState, positionKings,
-#                             BWpieces, legalMoves,color,castlingStatus)
-
-#     if color == 1:  # white's move
-
-#         max_evalScore = -MATE_EVALSCORE
-#         max_move = None
-
-#         for move in legalMoves:
-
-#             kingsExp = np.copy(positionKings)
-            
-#             # expected board with last user input
-#             cpc, dpc = movePiece(move, boardState, kingsExp, BWpieces,castlingStatus)
-#             eval_of_move = alphabeta(
-#                 boardState, 1-color, kingsExp, depth-1, α, β, BWpieces,castlingStatus)[0]
-            
-#             undoMove(move, cpc, dpc, boardState, BWpieces,castlingStatus)
-
-#             if eval_of_move >= max_evalScore:
-#                 max_evalScore = eval_of_move
-#                 max_move = move
-
-#             if max_evalScore > β:
-#                 break
-
-#             # if max eval_Sc > a, then update alpha w/ max eval_Sc
-#             # if the reverse, a stays the same
-#             α = max(α, max_evalScore)
-
-#         return max_evalScore, max_move
-
-#     if color == 0:  # black's move
-
-#         min_evalScore = MATE_EVALSCORE
-#         min_move = None
-
-#         for move in legalMoves:
-#             #piecesExp = copy.deepcopy(BWpieces)
-#             kingsExp = np.copy(positionKings)
-            
-#             # expected board with last user input
-#             cpc, dpc = movePiece(move, boardState, kingsExp, BWpieces,castlingStatus)
-#             eval_of_move = alphabeta(
-#                 boardState, 1-color, kingsExp, depth-1, α, β, BWpieces,castlingStatus)[0]
-#             undoMove(move, cpc, dpc, boardState, BWpieces,castlingStatus)
-
-#             if eval_of_move <= min_evalScore:
-#                 min_evalScore = eval_of_move
-#                 min_move = move
-
-#             if min_evalScore < α:
-#                 break
-
-#             β = min(β, min_evalScore)
-
-#         return min_evalScore, min_move    
 
 # =============================================================================
-
-# Evaluation functions: sortingEval, Eval
+# Evaluation functions: sortingEval, Eval, finalEval
 # =============================================================================
 
 #SE##########################################################################################
@@ -661,38 +478,6 @@ def sortingEval(boardState,BWpieces,color):
 
     return sumPoints  # output evaluation score
 
-#SEE##########################################################################################
-
-# def sortingEval_EVAL(boardState,BWpieces,color, evalPoints):
-
-#     # calculates total evaluation score
-#     sumPoints = 0
-        
-#     #--------------------------------------
-    
-#     # MID game
-#     if numPieces > 10:
-#         table = pieceTable["m"]
-    
-#     # END game
-#     else:
-#         table = pieceTable["e"]
-                
-#     for i in range_8:
-#         for j in range_8:
-#             b = boardState[i, j, :]
-#             p = b[0]
-#             c = b[1]
-            
-#             if p != 0:
-#                 # adds points for piece position
-#                 sumPoints += (table[(p,c)][i,j])*signCol[c]
-
-#             # adds points for eating a piece
-#             sumPoints += pieceEval[(p,c)]
-
-#     return sumPoints  # output evaluation score
-
 #E##########################################################################################
 
 # TIME EVERYTHING in main loop
@@ -726,10 +511,6 @@ def Eval(boardState, color, positionKings, BWpieces,castlingStatus,legalMoves=No
     if status == 5:
         sumPoints += (10)*signCol[color]
     
-    # # add points for castling
-    # if castlingStatus[(color)]:
-    #     sumPoints += (50)*signCol[color]
-
     #--------------------------------------
     ### evalPoints using Piece-Square tables
     numPieces = len(BWpieces[color])
@@ -745,8 +526,7 @@ def Eval(boardState, color, positionKings, BWpieces,castlingStatus,legalMoves=No
     for i in range_8:
         for j in range_8:
             b = boardState[i, j, :]
-            p = b[0]
-            c = b[1]
+            p, c = b[:]
             
             if p != 0:
                 # adds points for piece position

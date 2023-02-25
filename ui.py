@@ -12,6 +12,8 @@ from legal_checks import *
 # Functions: printboard, stringTOmove, moveTOstring, validInput
 # =============================================================================
 
+#PB##########################################################################################
+
 def printboard(boardState):
 
     # dictionary of (chess piece, color): "unicode"
@@ -44,6 +46,7 @@ def printboard(boardState):
 
     print("  a  b  c  d  e  f  g  h")
     
+#SM##########################################################################################
 
 def stringTOmove(userString):
 
@@ -54,6 +57,7 @@ def stringTOmove(userString):
 
     return userMove
 
+#MS##########################################################################################
 
 def moveTOstring(userMove):
 
@@ -67,41 +71,43 @@ def moveTOstring(userMove):
 
     return userString
 
-def getUserInput(boardState, color, positionKings, BWpieces, castlingStatus):
-    
-    userString = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
+#GUI##########################################################################################
 
-    # Legality check !!!!!!!!! FIX LEGAL INPUTS SHIT in validInput
+def getUserInput(boardState, color, positionKings, BWpieces, castlingStatus,moveCol):
+    
+    userString = input('Enter current & destination square (ex. "a2a3") or "r" to resign: ')
+    
+    if userString == "r":
+        print("\n" +Fore.RED + moveCol[color] + " resigned" + Fore.RESET)
+        return "r"
+    
+    # Legality check
     while (not validInput(userString)) or (not checkLegal(stringTOmove(userString),boardState,color,positionKings,BWpieces,castlingStatus)): # while not True = False
-        print(Fore.RED  + "\nThat move was illegal."+ Fore.RESET)
-        print("")
-        printboard(boardState)
-        print("")
         
-        if color == 0: # even = black
-            col = "\nBlack"
-        else: # odd = white
-            col = "\nWhite"
-            
-        print(Fore.GREEN  + col," to move\n" + Fore.RESET)
-        userString = input('Enter current & destination square (ex. a2a3) or "r" to resign: ')
-        userMove = stringTOmove(userString)
-        print("")
+        print(Fore.RED  + "\nThat move was illegal."+ Fore.RESET + "\n")
+        
+        printboard(boardState)
+        
+        print("\n" + Fore.GREEN  + moveCol[color]," to move" + Fore.RESET)
+        userString = input('Enter current & destination square (example: "a2a3") or "r" to resign: ')
+        
+        if userString == "r":
+            print("\n" +Fore.RED + moveCol[color] + " resigned" + Fore.RESET)
+            return "r"
+        
+        continue
     
     userMove = stringTOmove(userString)
     
     return userMove
 
-
+#VI##########################################################################################
 
 def validInput(userMove):
 
     allR = [str(i) for i in range(1, 9)]  # "1" - "8"
-    
-    if userMove == "r":
-        return True
 
-    elif len(userMove) == 4 or len(userMove) == 5:
+    if len(userMove) == 4 or len(userMove) == 5:
         
         letterC = userMove[0]
         rowC = userMove[1]
@@ -113,8 +119,7 @@ def validInput(userMove):
         destination = (letterD in columnNum.keys()) and (rowD in allR)
 
         if len(userMove) == 4:
-            # short castling
-                
+            
             if current and destination:
                     return True
 
@@ -125,8 +130,5 @@ def validInput(userMove):
 
             if current and destination and promotionL:
                 return True
-        
-        
     else:
         return False
-    

@@ -17,13 +17,13 @@ def movePiece(userMove, boardState, positionKings,BWpieces,castlingStatus):
     # current square, destination square, promotion
     i, j, k, l, prom = userMove  # r,c,r,c,prom
 
-    # current becoming destination square
+    # current square
     p, c = boardState[i, j, :]
     cpc = np.copy(boardState[i, j, :])  # current piece & color
 
-    dp = boardState[k, l, 0]  # dpc[0] # destination piece
+    # destination square
+    dp, dc = boardState[k, l, :]
     dpc = np.copy(boardState[k, l, :])  # destination piece & color
-    dc = boardState[k, l, 1]
     
     #------------------------
     ### update the king
@@ -109,63 +109,60 @@ def movePiece(userMove, boardState, positionKings,BWpieces,castlingStatus):
         
     # rook moves 
     if p == 3: #and not castlingStatus[(c,c)]
+    
         # black
         if c == 0:
-            
-            ### short - right
-            if i == 0 and j == 7: # h8R
-                castlingStatus[(i,j)] += 1
-                
-            ### long - left
-            if i == 0 and j == 0: # a8R
-                castlingStatus[(i,j)] += 1
+            if i == 0:
+                ### short - right
+                if j == 7: # h8R
+                    castlingStatus[(i,j)] += 1
+                    
+                ### long - left
+                if j == 0: # a8R
+                    castlingStatus[(i,j)] += 1
 
         # white
         if c == 1:
-            
-            # short - right
-            if (i == 7 and j == 7): # h1R
-                castlingStatus[(i,j)] += 1
-                
-            # long - left
-            if (i == 7 and j == 0): # a1R
-                castlingStatus[(i,j)] += 1
-    
-            
+            if i == 7:
+                # short - right
+                if j == 7: # h1R
+                    castlingStatus[(i,j)] += 1
+                    
+                # long - left
+                if j == 0: # a1R
+                    castlingStatus[(i,j)] += 1
+        
     # rook being taken
     if dp == 3: # and not castlingStatus[(dc,dc)] 
         
         # black
         if dc == 0:
-            
-            ### short - right
             # if rook was taken
-            if (k == 0 and l == 7): # h8R
-                castlingStatus[(k,l)] += 1
-                
-            ### long - left
-            # if rook was taken
-            if (k == 0 and l == 0): # a8R
-                castlingStatus[(k,l)] += 1
-            
+            if k == 0:
+                ### short - right
+                if l == 7: # h8R
+                    castlingStatus[(k,l)] += 1
+                    
+                ### long - left
+                if l == 0: # a8R
+                    castlingStatus[(k,l)] += 1
             
         # white
         if dc == 1:
-            
-            # short - right
-            if (k == 7 and l == 7): # h1R
-                castlingStatus[(k,l)] += 1
-                
-            # long - left
-            if (k == 7 and l == 0): # a1R
-                castlingStatus[(k,l)] += 1
+            if k == 7:
+                # short - right
+                if l == 7: # h1R
+                    castlingStatus[(k,l)] += 1
+        
+                # long - left
+                if l == 0: # a1R
+                    castlingStatus[(k,l)] += 1
               
     
     #------------------------
     ### boardstate updates
     
-    boardState[k, l, 0] = p
-    boardState[k, l, 1] = c
+    boardState[k, l, 0], boardState[k, l, 1] = p, c
 
     #---------------------------------------
     ### promotion
@@ -173,10 +170,6 @@ def movePiece(userMove, boardState, positionKings,BWpieces,castlingStatus):
         
         # promotion piece at destination
         boardState[k, l, 0] = prom
-        
-        #-----------------------------
-        # adds evalPoints after promoting
-        evalPoints += pieceEval[(prom,c)]
     
     #--------------------------------------- 
         
@@ -199,8 +192,9 @@ def movePiece_EVAL(userMove, boardState, positionKings,BWpieces,evalPoints,castl
     cpc = np.copy(boardState[i, j, :])  # currentpiece & color
     
     ### destination square
-    dp = boardState[k, l, 0]  # dpc[0] # destination piece
-    dc = boardState[k, l, 1]  # dpc[1] # destination color
+        # dpc[0] # destination piece
+        # dpc[1] # destination color
+    dp, dc = boardState[k, l, 0], boardState[k, l, 1]
     dpc = np.copy(boardState[k, l, :])  # destination piece & color 
         
     #---------------------------------------
@@ -208,6 +202,7 @@ def movePiece_EVAL(userMove, boardState, positionKings,BWpieces,evalPoints,castl
     if p == 1:
         # positionKings[c] = userMove[2:4]
         positionKings[c] = [k, l]  # matrix format
+        
     #---------------------------------------
     #### update bl/wh pieces set
     
@@ -238,19 +233,11 @@ def movePiece_EVAL(userMove, boardState, positionKings,BWpieces,evalPoints,castl
     else:
         table = pieceTable["e"][(p,c)]
    
-    
     # adds points for moving to a sqr
     evalPoints += (table[k,l] - table[i,j])*signCol[c]
  
-    ### ORIGINAL ###
-    # # deducts Piece-Square points from opponent after being eaten
-    # if dp != 0:
-    #     evalPoints -= (table[k,l])*signCol[1-c]
-    ### ORIGINAL ###
-    
-    #???????????????????????????????????????????????? test section 
+    # deducts points from the position of the piece that was taken
     if dp != 0:
-        # evalPoints -= (table[k,l])*signCol[1-c]
         
         # MID game
         if numPieces > 10:
@@ -260,9 +247,7 @@ def movePiece_EVAL(userMove, boardState, positionKings,BWpieces,evalPoints,castl
         else:
             table = pieceTable["e"][(dp,dc)]
             
-        evalPoints -= (table[k,l])*signCol[1-c]
-        
-    #???????????????????????????????????????????????? test section 
+        evalPoints -= (table[k,l])*signCol[dc]
     
     #---------------------------------------
     ### castling
@@ -303,9 +288,6 @@ def movePiece_EVAL(userMove, boardState, positionKings,BWpieces,evalPoints,castl
                 # updating castling status for color
                 castlingStatus[(c)] = True
                 #-----------------------------
-                # add points for castling
-                # evalPoints += (50)*signCol[c]
-                # print("hi 6")
                 
         # long - left
         if i == row and j == 4 and k == row and l == 2: # king move: e1c1 or e8c8
@@ -329,66 +311,61 @@ def movePiece_EVAL(userMove, boardState, positionKings,BWpieces,evalPoints,castl
                 # updating castling status for color
                 castlingStatus[(c)] = True
                 #-----------------------------
-                # add points for castling
-                # evalPoints += (50)*signCol[c]
              
     # rook moves 
     if p == 3: #and not castlingStatus[(c,c)]
+    
         # black
         if c == 0:
-            
-            ### short - right
-            if i == 0 and j == 7: # h8R
-                castlingStatus[(i,j)] += 1
-                
-            ### long - left
-            if i == 0 and j == 0: # a8R
-                castlingStatus[(i,j)] += 1
+            if i == 0:
+                ### short - right
+                if j == 7: # h8R
+                    castlingStatus[(i,j)] += 1
+                    
+                ### long - left
+                if j == 0: # a8R
+                    castlingStatus[(i,j)] += 1
 
         # white
         if c == 1:
-            
-            # short - right
-            if (i == 7 and j == 7): # h1R
-                castlingStatus[(i,j)] += 1
-                
-            # long - left
-            if (i == 7 and j == 0): # a1R
-                castlingStatus[(i,j)] += 1
+            if i == 7:
+                # short - right
+                if j == 7: # h1R
+                    castlingStatus[(i,j)] += 1
+                    
+                # long - left
+                if j == 0: # a1R
+                    castlingStatus[(i,j)] += 1
     
             
     # rook being taken
     if dp == 3: # and not castlingStatus[(dc,dc)] 
         
         # black
-        if dc == 0:
-            
-            ### short - right
-            # if rook was taken
-            if (k == 0 and l == 7): # h8R
-                castlingStatus[(k,l)] += 1
+        if dc == 0: # if rook was taken
+            if k == 0:
+                ### short - right
+                if l == 7: # h8R
+                    castlingStatus[(k,l)] += 1
                 
-            ### long - left
-            # if rook was taken
-            if (k == 0 and l == 0): # a8R
-                castlingStatus[(k,l)] += 1
+                ### long - left
+                if l == 0: # a8R
+                    castlingStatus[(k,l)] += 1
             
             
         # white
         if dc == 1:
-            
-            # short - right
-            if (k == 7 and l == 7): # h1R
-                castlingStatus[(k,l)] += 1
-                
-            # long - left
-            if (k == 7 and l == 0): # a1R
-                castlingStatus[(k,l)] += 1
+            if k == 7:
+                # short - right
+                if l == 7: # h1R
+                    castlingStatus[(k,l)] += 1
+                # long - left
+                if l == 0: # a1R
+                    castlingStatus[(k,l)] += 1
             
     #---------------------------------------
     # boardstate update
-    boardState[k, l, 0] = p
-    boardState[k, l, 1] = c
+    boardState[k, l, 0], boardState[k, l, 1] = p, c
 
     #---------------------------------------
     ### promotion
@@ -429,10 +406,11 @@ def undoMove(userMove, cpc, dpc, boardState, BWpieces,castlingStatus):
     #---------------------------
     ### promotion
     if prom != 0:
+        1+1
+        # fix this !!!
+        # do promotion
 
-        # adds evalPoints after promoting
-        evalPoints -= pieceEval[(prom,c)]
-    
+     
     #--------------------------- 
     # remove black/white piece from the list if on a current square
     BWpieces[c].remove((k, l))
@@ -550,16 +528,15 @@ def undoMove(userMove, cpc, dpc, boardState, BWpieces,castlingStatus):
         # white
         if dc == 1:    
             
-            # short - right
-            if (k == 7 and l == 7): # h1R
-                castlingStatus[(k,l)] -= 1
-             
-            # long - left
-            if (k == 7 and l == 0): # a1R
-                castlingStatus[(k,l)] -= 1
+            if k == 7:
+                # short - right
+                if l == 7: # h1R
+                    castlingStatus[(k,l)] -= 1
+                 
+                # long - left
+                if l == 0: # a1R
+                    castlingStatus[(k,l)] -= 1
             
-            
-   
  
 #UME##########################################################################################
 
@@ -570,19 +547,16 @@ def undoMove_EVAL(userMove, cpc, dpc, boardState, BWpieces,evalPoints,castlingSt
             
     
     boardState[i, j, :] = cpc  # current piece & color
-    p = cpc[0]
-    c = cpc[1]
+    p, c = cpc[0], cpc[1]
         
     #---------------------------------------
     
     boardState[k, l, :] = dpc  # destination piece & color
-    dp = dpc[0]  # destination piece
-    dc = dpc[1]
+    dp, dc = dpc[0], dpc[1]  # destination piece, color
     
     #---------------------------------------
     ### promotion
     if prom != 0:
-        
         evalPoints -= pieceEval[(prom,c)] # removes evalPoints after promoting
         
     #----------------------------------------
@@ -608,15 +582,7 @@ def undoMove_EVAL(userMove, cpc, dpc, boardState, BWpieces,evalPoints,castlingSt
     # adds points for moving to a sqr
     evalPoints -= (table[k,l] - table[i,j])*signCol[c]
     
-    #### ORIGINAL ####
-    # # deducts Piece-Square points from opponent after being eaten
-    # if dp != 0:
-    #     evalPoints += (table[k,l])*signCol[1-c]
-    #### ORIGINAL ####
-    
-    #???????????????????????????????????????????????? test section 
     if dp != 0:
-        # evalPoints += (table[k,l])*signCol[1-c]
         
         # MID game
         if numPieces > 10:
@@ -627,8 +593,6 @@ def undoMove_EVAL(userMove, cpc, dpc, boardState, BWpieces,evalPoints,castlingSt
             table = pieceTable["e"][(dp,dc)]
             
         evalPoints += (table[k,l])*signCol[1-c]
-        
-    #???????????????????????????????????????????????? test section 
     
     #---------------------------------------
     ### UNDO BWPieces
@@ -681,8 +645,6 @@ def undoMove_EVAL(userMove, cpc, dpc, boardState, BWpieces,evalPoints,castlingSt
                 # updating castling status for color
                 castlingStatus[(c)] = False
                 #-----------------------------
-                # deducts points for castling
-                # evalPoints -= (50)*signCol[c]
                     
         # long - left
         if i == row and j == 4 and k == row and l == 2: # king move: e1c1 or e8c8
@@ -706,59 +668,57 @@ def undoMove_EVAL(userMove, cpc, dpc, boardState, BWpieces,evalPoints,castlingSt
                 # updating castling status for color
                 castlingStatus[(c)] = False
                 #-----------------------------
-                # deducts points for castling
-                # evalPoints -= (50)*signCol[c]
     
     # rook moves or being taken
     if p == 3: #and castlingStatus[(c,c)]
         
         # black
         if c == 0:
-            
-            # short - right
-            if i == 0 and j == 7: # h8R
-                castlingStatus[(i,j)] -= 1
-                
-            # long - left
-            if (i == 0 and j == 0): # a8R
-                castlingStatus[(i,j)] -= 1
+            if i == 0:
+                # short - right
+                if j == 7: # h8R
+                    castlingStatus[(i,j)] -= 1
+                    
+                # long - left
+                if j == 0: # a8R
+                    castlingStatus[(i,j)] -= 1
             
             
         # white
         if c == 1:
-            
-            # short - right
-            if (i == 7 and j == 7): # h1R
-                castlingStatus[(i,j)] -= 1
-                
-            # long - left
-            if (i == 7 and j == 0): # a1R
-                castlingStatus[(i,j)] -= 1
+            if i == 7:
+                # short - right
+                if j == 7: # h1R
+                    castlingStatus[(i,j)] -= 1
+                    
+                # long - left
+                if j == 0: # a1R
+                    castlingStatus[(i,j)] -= 1
                 
     
     if dp == 3: #and castlingStatus[(dc,dc)]
         
         # black
         if dc == 0:
-            
-            # short - right
-            if k == 0 and l == 7: # h8R
-                castlingStatus[(k,l)] -= 1
-             
-            # long - left
-            if (k == 0 and l == 0): # a8R
-                castlingStatus[(k,l)] -= 1
+            if k == 0:
+                # short - right
+                if l == 7: # h8R
+                    castlingStatus[(k,l)] -= 1
+                 
+                # long - left
+                if l == 0: # a8R
+                    castlingStatus[(k,l)] -= 1
                 
         # white
         if dc == 1:    
-            
-            # short - right
-            if (k == 7 and l == 7): # h1R
-                castlingStatus[(k,l)] -= 1
-             
-            # long - left
-            if (k == 7 and l == 0): # a1R
-                castlingStatus[(k,l)] -= 1
+            if k == 7:
+                # short - right
+                if l == 7: # h1R
+                    castlingStatus[(k,l)] -= 1
+                 
+                # long - left
+                if l == 0: # a1R
+                    castlingStatus[(k,l)] -= 1
     #---------------------------
     ### castling END
 
@@ -774,7 +734,7 @@ def sqr_under_attack(boardState, color, square, BWpieces,castlingStatus):
     # opposite color from king
     opp_color = 1 - color
 
-    listOpp = BWpieces[1-color]
+    listOpp = BWpieces[opp_color]
 
     kh = square[0]  # 0:7 matrix format
 
@@ -783,8 +743,7 @@ def sqr_under_attack(boardState, color, square, BWpieces,castlingStatus):
     
     # attack piece in list of opposite color
     for ap in listOpp:
-        ah = ap[0]  # row matrix format
-        av = ap[1]  # attack verical
+        ah, av = ap[0], ap[1]   # row matrix format, attack verical
         move[0:2] = ap
 
         if boardState[ah, av, 0] == 6 and ((ah == 1 and kh == 0) or (ah == 6 and kh == 7)):
@@ -844,23 +803,16 @@ def checkLegal(userMove, boardState, color, positionKings, BWpieces, castlingSta
 # check if userMove is legal
 def positionLegal(userMove, boardState, color,BWpieces,castlingStatus):
 
-
-    # # pass 'r' through function
-    # if userMove == "r":
-    #     return True
-
     # current square, destination square, promotion
     ch, cv, dh, dv, prom = userMove  # r,c,r,c,prom
 
     # current square
     # ex. a2     (6,0,0) = 6
-    p = boardState[ch, cv, 0]  # 6
-    c = boardState[ch, cv, 1]  # 1
+    p, c = boardState[ch, cv, 0], boardState[ch, cv, 1]  # 6, 1
 
     # destination square
     # ex. a3    (5,0,1)
-    dp = boardState[dh, dv, 0]
-    dc = boardState[dh, dv, 1]  # 1
+    dp, dc = boardState[dh, dv, 0], boardState[dh, dv, 1]
 
     # horizontal and vertical differences
     # ex. a2a3
@@ -1263,7 +1215,7 @@ def generateLegal(piece, boardState, color, positionKings, BWpieces,castlingStat
     kingsExp = np.copy(positionKings)
     
     for move in listMoves:
-        cpc, dpc = movePiece_EVAL(move,boardState,kingsExp,BWpieces,castlingStatus)
+        cpc, dpc = movePiece(move,boardState,kingsExp,BWpieces,castlingStatus)
 
         # is king IN check?
         kingINcheck = sqr_under_attack(

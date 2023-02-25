@@ -11,8 +11,9 @@ def main():
     # Parameters
     #----------------------------------------------
     userColor = 1 # user is white by default
-    depth = 3
+    depth = 4
     MATE_EVALSCORE = 1e3
+    
     #----------------------------------------------
     
     logging.basicConfig(filename='logs.txt', level=logging.INFO,
@@ -52,7 +53,7 @@ def main():
                 
                 if 'moves' in msg: # user: white by default
                     
-                    move = msg.split(" ")[-1] # take last move printed
+                    move = msg.split(" ")[-1] # takes last move printed
                     userMove = stringTOmove(move)
                     cpc,dpc,evalPoints = movePiece_EVAL(userMove,boardState,positionKings,BWpieces,evalPoints,castlingStatus)
 
