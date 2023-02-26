@@ -202,7 +202,15 @@ pieceEval = {
     (6, 1): 100,
     }
 
+gameStatus ={
+    0: "play",
+    1: "MATE",
+    2: "DRAW by insufficient material",
+    3: "STALEMATE",
+    }
+
 #------------------------------------------------------------------------------
+# Piece-square table access dictionaries
 
 mid_pieceTable ={
     
@@ -235,10 +243,3 @@ pieceTable ={
     }
 
 #------------------------------------------------------------------------------
-
-gameStatus ={
-    0: "play",
-    1: "MATE",
-    2: "DRAW by insufficient material",
-    3: "STALEMATE",
-    }

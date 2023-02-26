@@ -5,14 +5,13 @@ import time
 import copy
 import collections
 import matplotlib.pyplot as plt
-import cProfile
 
 # importing functions
 from chessFunctions import *
 
-# =============================================================================
+# ===========================================================================================
 # Parameters
-# =============================================================================
+# ===========================================================================================
 
 '''
 Depth options:
@@ -30,33 +29,35 @@ Mode options:
     "ABE": Alpha–beta pruning algorithm with incremental heuristic value updating.
 '''
 
-depth = 4
-engineColor = 0
+depth = 3
+engineColor = 1
 
-### engine
-engineMode = "negaAB" # Options: "random", "MM", "AB", "ABE"
-                    # Recommended/fastest mode: "ABE"
+# engine
+engineMode = "ABE" # Options: "random", "MM", "AB", "ABE"
+                   # Recommended/fastest mode: "ABE"
                     
-### opponent/user
+# opponent/user
 opponentMode = "random" # Options: "user", "random"
 
-# =============================================================================
+# ===========================================================================================
 # Initialization
-# =============================================================================
+# ===========================================================================================
     
 boardState, positionKings, BWpieces, castlingStatus, evalPoints, moveCol = initialization()
 
 moveNumber = 1
 engine_moves = 0
-  
+evalList = []
+evalList.append(0)
+
 print("Welcome to the game!\n")
 printboard(boardState)
 print("\nTotal number of moves: 0")
 print("_________________________\n")
   
-# =============================================================================
+# ===========================================================================================
 # Main game execution loop
-# =============================================================================
+# ===========================================================================================
 
 while 1: 
     
@@ -81,10 +82,7 @@ while 1:
     else: 
         
         start = time.time()
-        
-        if engineMode == "negaAB":
-            evalSc, userMove = negaAB(boardState,color,positionKings,depth,-MATE_EVALSCORE,MATE_EVALSCORE,BWpieces, evalPoints,castlingStatus)
-                        
+            
         if engineMode == "AB":
             evalSc, userMove = alphabeta(boardState, color, positionKings, depth, -MATE_EVALSCORE,MATE_EVALSCORE, BWpieces,castlingStatus)
             
@@ -110,6 +108,10 @@ while 1:
 
     # update the board
     cpc,dpc,evalPoints = movePiece_EVAL(userMove,boardState,positionKings,BWpieces,evalPoints,castlingStatus)
+    
+    evalBoard = Eval(boardState,color,positionKings,BWpieces,castlingStatus)
+    evalList.append(evalBoard)
+    
     printboard(boardState)
 
     print("\nTotal number of moves: ",moveNumber)
@@ -117,15 +119,24 @@ while 1:
     # check if opponent is mated or it's a draw/stalemate
     status = DrawStalemateMate(boardState,1-color,positionKings,BWpieces,castlingStatus)
     
-    
     if status != 0 and status != 4:
         print("\n" +Fore.RED + gameStatus[status] + Fore.RESET)
         break
     
     print("_________________________")
+    
     moveNumber += 1
+    
 
-# =============================================================================
-# testing portion 
+# ===========================================================================================
+# Testing portion 
+# ===========================================================================================
 
 print("\nAverage engine time per move: ",engine_time/engine_moves)
+
+# plot game evaluation where x = move number, y = evaluation
+plt.plot(np.array(range(0,moveNumber+1)),np.array(evalList), color='green', marker = "o",) 
+plt.xlabel('Move number')
+plt.ylabel('Evaluation score')
+plt.title("Game evaluation")
+plt.show()

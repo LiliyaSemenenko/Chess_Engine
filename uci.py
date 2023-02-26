@@ -64,8 +64,6 @@ def main():
                 
             # TO DO: implement fen string to set up a board
             elif "position fen" in msg:
-                # fen = " ".join(msg.split(" ")[2:])
-                # board.set_fen(fen)
                 Exception("no fen allowed ")
                 continue
         
