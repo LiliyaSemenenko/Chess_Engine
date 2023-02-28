@@ -9,13 +9,10 @@ import matplotlib.pyplot as plt
 # importing functions
 from chessFunctions import *
 
+
 # ===========================================================================================
 # Parameters
 # ===========================================================================================
-'''
-put main execution loop in a fucntion, fadded test_engine function in test.py, fixed stalemate evaluation, normalized eval plot, changed mate eval score to 3e3, fixed draw by insufficient material in DSM
-'''
-
 
 def main():
     
@@ -40,13 +37,12 @@ def main():
     
     # engine
     depth = 3
-    engineColor = 1 # Options: 
+    engineColor = 0 # Options: 
                     # 0: black, 1: white.
     
-    engineMode = "ABE" # Options: "random", "MM", "AB", "ABE"
+    engineMode = "random" # Options: "random", "MM", "AB", "ABE"
                         # Recommended/fastest mode: "ABE"
                         
-    
     # ===========================================================================================
     # Initialization
     # ===========================================================================================
@@ -68,7 +64,8 @@ def main():
     printboard(boardState)
     
     print("\nTotal number of moves: 0")
-    print("_________________________\n")
+    line = "_________________________"
+    print(line)
       
     # ===========================================================================================
     # Main game execution loop
@@ -78,7 +75,7 @@ def main():
         
         color = moveNumber % 2
         print(Fore.GREEN  + moveCol[color]," to move" + Fore.RESET)
-                    
+        
         # opponent's turn
         if color == 1-engineColor:
             
@@ -120,29 +117,30 @@ def main():
             engine_moves += 1
             
             print("\nchosen move:", moveTOstring(userMove),"\n")
-    
-    
-    
-    
+
         # update the board
         cpc,dpc,evalPoints = movePiece_EVAL(userMove,boardState,positionKings,BWpieces,evalPoints,castlingStatus)
           
+        # compute current evaluation score
+        ''' white wins via checkmate: 3000 
+            black wins via checkmate: -3000 '''   
         evalBoard = Eval(boardState,color,positionKings,BWpieces,castlingStatus)
         print("Eval:",evalBoard)
         evalList.append(evalBoard)
         
         printboard(boardState)
             
+        print("\nTotal number of moves: ",moveNumber, line)
+        
+        
         # check if opponent is mated or it's a draw/stalemate
         status = DrawStalemateMate(boardState,1-color,positionKings,BWpieces,castlingStatus)
-
 
         # 0 = play
         # 1 = mate
         # 2 = draw by insufficient material
         # 3 = stalemate
         # 4 = player in check
-        # 5 = opponent in check
         
         if status != 0 and status != 4:
                 
@@ -155,50 +153,21 @@ def main():
                 print("\n" + Fore.RED +  gameStatus[status] + Fore.RESET)
                 
             print("\nAverage engine time per move: ",engine_time/engine_moves)
-            
-            print("\nTotal number of moves: ",moveNumber)
-            print("_________________________")
-            
-            return status, evalList, moveNumber
+                        
+            return status, evalList, moveNumber 
             break
         
-        print("\nTotal number of moves: ",moveNumber)
-        print("_________________________")
     
         moveNumber += 1
     
     return status, evalList, moveNumber
 
 # ===========================================================================================
-# Testing portion 
+# Calling functions
 # ===========================================================================================
 
+# calling main function
 status, evalList, moveNumber = main()
 
-# plot game evaluation where x = move number, y = evaluation
-mn = np.array(range(0,moveNumber+1))
-evl = np.array(evalList, dtype = float)
-evl = evl.astype(np.float32)
-print("original:",evl)
-
-if evl[-2] == 0: 
-    evl = evl[:-1]
-    mn = mn[:-1]
-    
-if evl[-1] == 0: 
-    evl*=1/np.abs(MATE_EVALSCORE)
-
-
-else: evl*=1/np.abs(evl[-1])
-
-print("scaled",evl)
-
-plt.figure(figsize = (6,6))
-plt.plot(mn, evl, color='green')
-plt.ylim([-1,1])
-plt.axhline(0)
-plt.xlabel('Move number')
-plt.ylabel('Evaluation score')
-plt.title("Game evaluation")
-plt.savefig("evalplot.png")
-plt.show()
+# plot the evaluation after each move
+plotEvl(status, evalList, moveNumber)
