@@ -58,7 +58,7 @@ def initialization():
     positionKings = [positionKing_B, positionKing_W] 
 
 
-    # initialize pieces
+    # initialize positions of the pieces
     BWpieces = [set(),set()]
 
     for i in range(8): # rows
@@ -125,21 +125,45 @@ def DrawStalemateMate(boardState,color,positionKings,BWpieces,castlingStatus,leg
 
     # passes legal moves if calculated previously
     if legalMoves == None:
-        # start = time.time()
         legalMoves = allLegal(
             boardState, color, positionKings, BWpieces,castlingStatus)
-        # end = time.time()
 
-    listCol = BWpieces[color]
-    listOpp = BWpieces[1-color]
 
     # DRAW by INSUFFICIENT MATERIAL
-    # check if only kings are left
-    # check if only knights or bishops left
-    if (len(listCol) == 1 or (len(listCol) == 2 and ((4 in listCol) or (5 in listCol)))):
-        if (len(listOpp) == 1 or (len(listOpp) == 2 and ((4 in listOpp) or (5 in listOpp)))):
-            return 2
 
+    ''' If both sides have any one of the following: 
+            - a lone king 
+            - a king and bishop
+            - a king and knight '''
+    
+    listCol = BWpieces[color]
+    listOpp = BWpieces[1-color]
+    
+    def knightORbishop(someList):
+        if len(someList) == 2:
+            listOpp = list(someList)
+            
+            rows = [x[0] for x in someList]
+            columns = [y[1] for y in someList]
+    
+            for i in rows:
+                for j in columns: 
+                    p = boardState[i, j, 0]
+                    
+                    if p == 4 or p == 5:
+                        return True
+        else: return False
+    
+    if len(listCol) == 1:
+        if len(listOpp) == 1: return 2
+        if knightORbishop(listOpp): return 2
+        
+    if len(listOpp) == 1:
+        if knightORbishop(listCol): return 2
+
+    if knightORbishop(listCol) and knightORbishop(listOpp): return 2
+    
+    # check if king of current player's color is "in check" (or under attack)
     myKcheck = sqr_under_attack(
         boardState, color, positionKings[color], BWpieces,castlingStatus)
 
@@ -158,6 +182,7 @@ def DrawStalemateMate(boardState,color,positionKings,BWpieces,castlingStatus,leg
 
     OppKcheck = sqr_under_attack(
         boardState, 1-color, positionKings[1-color], BWpieces,castlingStatus)
+    
     if OppKcheck:
         return 5
 
@@ -490,16 +515,26 @@ def Eval(boardState, color, positionKings, BWpieces,castlingStatus,legalMoves=No
     # 4 = player in check
     # 5 = opponent in check
 
-    # checks for game status
-    status = DrawStalemateMate(boardState, color, positionKings,BWpieces,castlingStatus,legalMoves)
+    # checks for game status for current color
+    status = DrawStalemateMate(boardState, color, positionKings, BWpieces,castlingStatus,legalMoves)
 
     if status == 1:
-        # black or white gets mated
-        return (1 - 2*color)*MATE_EVALSCORE  # white or black wins
+        # gets mated
+        return (signCol[1-color])*MATE_EVALSCORE  # opponent wins
 
-    if status == 2 or status == 3:
+    if status == 2:
         return 0
 
+    # checks for game status for opposite color
+    status = DrawStalemateMate(boardState, 1-color, positionKings,BWpieces,castlingStatus,legalMoves)
+    
+    if status ==3:
+        return 0
+    
+    if status == 1:
+        # current color gets mated
+        return (signCol[color])*MATE_EVALSCORE  # opponent wins
+    
     # calculates total evaluation score
     sumPoints = 0
 

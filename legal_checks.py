@@ -6,9 +6,9 @@ import copy
 # importing functions
 from global_parameters import *
 
-# =============================================================================
+# ===========================================================================================
 # Functions: movePiece, undoMove, positionLegal, sqr_under_attack, generateLegal 
-# =============================================================================
+# ===========================================================================================
 
 #MP##########################################################################################
 
@@ -743,7 +743,7 @@ def sqr_under_attack(boardState, color, square, BWpieces,castlingStatus):
     
     # attack piece in list of opposite color
     for ap in listOpp:
-        ah, av = ap[0], ap[1]   # row matrix format, attack verical
+        ah, av = ap[:]  # row matrix format, attack verical
         move[0:2] = ap
 
         if boardState[ah, av, 0] == 6 and ((ah == 1 and kh == 0) or (ah == 6 and kh == 7)):
@@ -956,13 +956,12 @@ def positionLegal(userMove, boardState, color,BWpieces,castlingStatus):
             if absH == 0:
 
                 # check if standing on initial square
-                # if not ((ch==1 and color==0) or (ch==6 and color==1)):
                 if (ch != 1 or color != 0) and (ch != 6 or color != 1):
                     return False
 
                 # doesn't allow to jump over a piece
                 White2 = (ch == 6 and boardState[5, cv, 0] != 0)
-                # Black2 = (ch == 1 and boardState[2,cv,0] != 0)
+
                 if (White2 or (ch == 1 and boardState[2, cv, 0] != 0)) or dp != 0:
                     return False
             else:

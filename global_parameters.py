@@ -6,7 +6,7 @@ import copy
 # =============================================================================
 
 range_8 = range(8)
-MATE_EVALSCORE = 1e10
+MATE_EVALSCORE = 3e3
 
 # =============================================================================
 # Piece-Square tables
@@ -204,7 +204,7 @@ pieceEval = {
 
 gameStatus ={
     0: "play",
-    1: "MATE",
+    1: "CHECKMATE",
     2: "DRAW by insufficient material",
     3: "STALEMATE",
     }
