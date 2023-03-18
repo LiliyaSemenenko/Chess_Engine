@@ -5,14 +5,14 @@ import sys
 # importing files
 from chessFunctions import *
 
-def main():
+def uci():
     
     #----------------------------------------------
     # Parameters
     #----------------------------------------------
     userColor = 1 # user is white by default
     depth = 4
-    MATE_EVALSCORE = 1e3
+    MATE_EVALSCORE = 3e3
     
     #----------------------------------------------
     
@@ -46,7 +46,7 @@ def main():
                 continue
         
             elif msg == "ucinewgame":
-                boardState, positionKings, BWpieces, castlingStatus, evalPoints = initialization()
+                boardState, positionKings, BWpieces, castlingStatus, evalPoints, moveCol = initialization()
                 continue
             
             elif "position startpos" in msg:
@@ -89,4 +89,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    uci()

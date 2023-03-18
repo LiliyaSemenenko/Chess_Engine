@@ -74,7 +74,7 @@ def moveTOstring(userMove):
 
 def getUserInput(boardState, color, positionKings, BWpieces, castlingStatus,moveCol):
     
-    userString = input('Enter current & destination square (ex. "a2a3") or "r" to resign: ')
+    userString = input('Enter current & destination square or resign: ')
     
     if userString == "r":
         print("\n" +Fore.RED + moveCol[color] + " resigned" + Fore.RESET)
@@ -83,12 +83,12 @@ def getUserInput(boardState, color, positionKings, BWpieces, castlingStatus,move
     # Legality check
     while (not validInput(userString)) or (not checkLegal(stringTOmove(userString),boardState,color,positionKings,BWpieces,castlingStatus)): # while not True = False
         
-        print(Fore.RED  + "\nThat move was illegal."+ Fore.RESET + "\n")
+        print(Fore.RED  + "\nThat move was illegal.\n"+ Fore.RESET)
         
         printboard(boardState)
         
         print("\n" + Fore.GREEN  + moveCol[color]," to move" + Fore.RESET)
-        userString = input('Enter current & destination square (example: "a2a3") or "r" to resign: ')
+        userString = input('Enter current & destination square or resign: ')
         
         if userString == "r":
             print("\n" +Fore.RED + moveCol[color] + " resigned" + Fore.RESET)
@@ -135,7 +135,9 @@ def validInput(userMove):
 def plotEvl(status, evalList, moveNumber):
     
     # plot game evaluation where x = move number, y = evaluation
-    mn = np.array(range(0,moveNumber+1))
+    if status == 1 or status == 2 or status == 3: mn = np.array(range(0,moveNumber+1))
+    else: mn = np.array(range(0,moveNumber))
+    
     evl = np.array(evalList, dtype = float)
     evl = evl.astype(np.float32)
     # print("original:",evl)
@@ -152,6 +154,19 @@ def plotEvl(status, evalList, moveNumber):
 
     # print("scaled",evl)
 
+    plt.figure(figsize = (6,6))
+    plt.plot(mn, evl, color='green')
+    plt.ylim([-1,1])
+    plt.axhline(0)
+    plt.xlabel('Move number')
+    plt.ylabel('Evaluation score')
+    plt.title("Game evaluation")
+    plt.savefig("evalplot.png")
+    plt.show()
+    
+    
+def plotTest(status, evalList, moveNumber, color):
+    
     plt.figure(figsize = (6,6))
     plt.plot(mn, evl, color='green')
     plt.ylim([-1,1])

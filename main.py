@@ -6,15 +6,19 @@ import copy
 import collections
 import matplotlib.pyplot as plt
 
+
 # importing functions
 from chessFunctions import *
+
+
+depth = 1
 
 
 # ===========================================================================================
 # Parameters
 # ===========================================================================================
 
-def main():
+def main(depth):
     
     '''
     Depth options:
@@ -36,16 +40,15 @@ def main():
     opponentMode = "random" # Options: "user", "random"
     
     # engine
-    depth = 3
-    engineColor = 0 # Options: 
+    engineColor = 1 # Options: 
                     # 0: black, 1: white.
     
-    engineMode = "random" # Options: "random", "MM", "AB", "ABE"
+    engineMode = "ABE" # Options: "random", "MM", "AB", "ABE"
                         # Recommended/fastest mode: "ABE"
                         
-    # ===========================================================================================
-    # Initialization
-    # ===========================================================================================
+# ===========================================================================================
+# Initialization
+# ===========================================================================================
         
     boardState, positionKings, BWpieces, castlingStatus, evalPoints, moveCol = initialization()
     
@@ -56,30 +59,34 @@ def main():
     evalList.append(0)
     
     print("""
-          Welcome to liliya-bot!
-          Author: Liliya Semenenko\n
-    The new game begins here!
-    """)
-    
+Welcome to Liliya_Bot!
+Author: Liliya Semenenko\n
+
+Rules:
+* Enter moves in long algebraic notation. Ex: e2e4, e1g1 (white short castling), e7e8q (for promotion).
+* Enter "r" to resign.\n
+
+A new game begins here!\n""")
+  
     printboard(boardState)
     
     print("\nTotal number of moves: 0")
     line = "_________________________"
     print(line)
       
-    # ===========================================================================================
-    # Main game execution loop
-    # ===========================================================================================
+# ===========================================================================================
+# Main game execution loop
+# ===========================================================================================
     
     while 1: 
-        
+                
         color = moveNumber % 2
         print(Fore.GREEN  + moveCol[color]," to move" + Fore.RESET)
         
         # opponent's turn
         if color == 1-engineColor:
             
-            if opponentMode == "user" :
+            if opponentMode == "user":
                 userMove = getUserInput(boardState, color, positionKings, BWpieces, castlingStatus,moveCol)
     
                 if str(userMove) == "r": break
@@ -87,9 +94,7 @@ def main():
             if opponentMode == "random":
                 legalMoves = allLegal(boardState,color,positionKings,BWpieces,castlingStatus)
                 userMove = (random.choices(legalMoves, k=1))[0]
-         
-            print("\nchosen move:", moveTOstring(userMove),"\n")
-            
+                     
         # engine's turn
         else: 
             
@@ -108,24 +113,26 @@ def main():
                 legalMoves = allLegal(boardState,color,positionKings,BWpieces,castlingStatus)
                 userMove = (random.choices(legalMoves, k=1))[0]
             
-            if engineMode == "user" :
+            if engineMode == "user":
                 userMove = getUserInput(boardState, color, positionKings, BWpieces, castlingStatus)
                 
             end = time.time()
         
             engine_time = end-start
             engine_moves += 1
-            
-            print("\nchosen move:", moveTOstring(userMove),"\n")
+        
+        
+        # print the chosen move
+        if (color == engineColor and engineMode == "user") or (color == 1-engineColor and opponentMode == "user"): print("")
+        else: print("\nchosen move:", moveTOstring(userMove),"\n")
 
         # update the board
         cpc,dpc,evalPoints = movePiece_EVAL(userMove,boardState,positionKings,BWpieces,evalPoints,castlingStatus)
           
         # compute current evaluation score
-        ''' white wins via checkmate: 3000 
-            black wins via checkmate: -3000 '''   
+        ''' white wins via checkmate: 3000; black wins via checkmate: -3000 '''   
         evalBoard = Eval(boardState,color,positionKings,BWpieces,castlingStatus)
-        print("Eval:",evalBoard)
+        print("evaluation: ",evalBoard,"\n")
         evalList.append(evalBoard)
         
         printboard(boardState)
@@ -154,20 +161,24 @@ def main():
                 
             print("\nAverage engine time per move: ",engine_time/engine_moves)
                         
-            return status, evalList, moveNumber 
+            # return status, evalList, moveNumber, color, engineColor
+            break
+    
+        # fails to end the game
+        if moveNumber == 100:
+            status = 8
             break
         
-    
         moveNumber += 1
     
-    return status, evalList, moveNumber
+    return status, evalList, moveNumber, color, engineColor
 
 # ===========================================================================================
 # Calling functions
 # ===========================================================================================
 
 # calling main function
-status, evalList, moveNumber = main()
+status, evalList, moveNumber, color, engineColor  = main(depth)
 
 # plot the evaluation after each move
 plotEvl(status, evalList, moveNumber)

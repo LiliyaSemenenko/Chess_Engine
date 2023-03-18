@@ -5,8 +5,23 @@ import copy
 # Parameters
 # =============================================================================
 
+# import matplotlib.pyplot as plt
+# a = [1,1,1,2,2,2,2,3,3,3,3,3,5,6,6,6,7,7,7,7,7,8,10,22,25,25,33,21,30,12,17,14,23,24,23,24,43,22,15,34,43,22,38,41,35,25,1,1,1,2,2,2,2,3,3,3,3,3,5,6,6,6,7,7,7,7,7,8,10,22,25,25,33,21,30,12,17,14,23,24,23,24,43,22,15,34,43,22,38,41,35,25]
+# numbins = max(a) - min(a) + 1
+
+# plt.figure(figsize = (6,6))
+# plt.hist(a, density = False, rwidth = 0.7, bins = numbins)
+
+
+
+# creating the bar plot
+# counts, edges = np.histogram(a)  # density=False would make counts
+# plt.plot(edges[:-1],counts)
+# print(counts)
+
+# , align='mid'
 range_8 = range(8)
-MATE_EVALSCORE = 3e3
+MATE_EVALSCORE = 1e4
 
 # =============================================================================
 # Piece-Square tables
