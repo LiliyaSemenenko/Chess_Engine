@@ -95,8 +95,8 @@ To test the engine's performance, an average time engine has used to choose the 
 Output example: 
 
 `Average engine time per move:  0.209038734436035`
-![game eval](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/evalplot.png)
 
+![game eval](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/evalplot.png)
 
 In addition, python `test.py` could be used to run x number of games and test their result and the number of moves it took to win.
 
