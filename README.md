@@ -84,21 +84,24 @@ Note: Liliya_Bot does not accept a FEN string.
 
 See the [UCI interface doc](https://www.wbec-ridderkerk.nl/html/UCIProtocol.html) for more information on communicating with the engine.
 
-<br>
-
 ## Connect it to Lichess.org
 
 To play Liliya_Bot on lichess.org, you'll need to use a tool [ShailChoksi/lichess-bot](https://github.com/ShailChoksi/lichess-bot), which acts as a bridge between the Lichess API and chess engines. Additionally, you'll need a BOT account. To use this tool, you'll also need to generate an engine executable file using [pyinstaller](https://www.pyinstaller.org/).
-<br>
+
 # Tests
 
-`python test.py`
+To test the engine's performance, an average time engine has used to choose the best move and an evaluation plot are printed after every game.
+`Average engine time per move:  0.209038734436035`
+![game eval](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/evalplot.png)
 
-![game eval](https://raw.github.com/thomasahle/sunfish/master/docs/logo/sunfish_large.png)
-![number of wins](https://raw.github.com/thomasahle/sunfish/master/docs/logo/sunfish_large.png)
-![number of moves to win](https://raw.github.com/thomasahle/sunfish/master/docs/logo/sunfish_large.png)
 
-<br>
+In addition, python `test.py` could be used to run x number of games and test their result and the number of moves it took to win.
+
+An experiment involving a compilation of 100 games at depth 3, where the engine operated as the white player, was carried out. The outcomes are illustrated in the plots displayed below:
+
+![100 games reslut](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/testBar_depth_3.png)
+
+![100 games distribution](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/testHist_depth_3.png)
 
 # Limitations
 
@@ -110,7 +113,6 @@ Liliya_Bot supports all chess rules, except:
 - seventy-five-move rule
 - draw by mutual agreement
 - en passant capture
-<br>
 
 # Contribution
 
