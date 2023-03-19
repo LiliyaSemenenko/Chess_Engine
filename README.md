@@ -91,6 +91,9 @@ To play Liliya_Bot on lichess.org, you'll need to use a tool [ShailChoksi/liches
 # Tests
 
 To test the engine's performance, an average time engine has used to choose the best move and an evaluation plot are printed after every game.
+
+Output example: 
+
 `Average engine time per move:  0.209038734436035`
 ![game eval](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/evalplot.png)
 
@@ -98,9 +101,7 @@ To test the engine's performance, an average time engine has used to choose the 
 In addition, python `test.py` could be used to run x number of games and test their result and the number of moves it took to win.
 
 An experiment involving a compilation of 100 games at depth 3, where the engine operated as the white player, was carried out. The outcomes are illustrated in the plots displayed below:
-
 ![100 games reslut](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/testBar_depth_3.png)
-
 ![100 games distribution](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/testHist_depth_3.png)
 
 # Limitations
