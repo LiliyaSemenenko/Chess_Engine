@@ -2,7 +2,7 @@
 
 Liliya_Bot is a chess engine fully written in Python that utilizes:
 
-- [minimax](https://en.wikipedia.org/wiki/Minimax#Minimax_algorithm_with_alternate_moves) algorithm for move searching the best legal moves. The time complexity: O(b^d), where b is the number of legal moves at each point and m is the maximum depth of the tree;
+- [minimax](https://en.wikipedia.org/wiki/Minimax#Minimax_algorithm_with_alternate_moves) algorithm for move searching the best legal moves. The time complexity: O(b^d), where b is the number of legal moves at each point and d is the maximum depth of the tree;
 - [alpha-beta pruning](https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning), a simplified and much faster version of the minimax algorithm. Best-case time complexity: O(b^d/2).
 - simple evaluation function and an alternative incremental board evaluation. Both evaluation options include piece-square tables;
 - [move ordering](https://www.chessprogramming.org/Move_Ordering) based on heuristics like captures, positions on the board, and promotions;
@@ -86,12 +86,10 @@ See the [UCI interface doc](https://www.wbec-ridderkerk.nl/html/UCIProtocol.html
 
 <br>
 
-## Lichess.org
+## Connect it to Lichess.org
 
 To play Liliya_Bot on lichess.org, you'll need to use a tool [ShailChoksi/lichess-bot](https://github.com/ShailChoksi/lichess-bot), which acts as a bridge between the Lichess API and chess engines. Additionally, you'll need a BOT account. To use this tool, you'll also need to generate an engine executable file using [pyinstaller](https://www.pyinstaller.org/).
-
 <br>
-
 # Tests
 
 `python test.py`
@@ -112,7 +110,6 @@ Liliya_Bot supports all chess rules, except:
 - seventy-five-move rule
 - draw by mutual agreement
 - en passant capture
-
 <br>
 
 # Contribution
