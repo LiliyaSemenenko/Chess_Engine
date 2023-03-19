@@ -90,7 +90,7 @@ To play Liliya_Bot on lichess.org, you'll need to use a tool [ShailChoksi/liches
 
 # Tests
 
-To test the engine's performance, an average time engine has used to choose the best move and an evaluation plot are printed after every game. A positive evaluation score means white is winning, negative means white is winning, and 0 is a draw.
+To test the engine's performance, an average time engine has used to choose the best move and an evaluation plot are printed after every game. A positive evaluation score means white is winning, negative means black is winning, and 0 is a draw.
 
 Output example where white was clearly winning:
 

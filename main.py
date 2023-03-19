@@ -6,50 +6,15 @@ import copy
 import collections
 import matplotlib.pyplot as plt
 
-
 # importing functions
 from chessFunctions import *
-
-
-depth = 1
-
-
-# ===========================================================================================
-# Parameters
-# ===========================================================================================
-
-def main(depth):
-    
-    '''
-    Depth options:
-        any whole number in a range [1,inf).
-        
-    Color options: 
-        0: black, 
-        1: white.
-        
-    Mode options:
-        "user": user mannualy inputs their move in console in long algebraic notation (ex: "a2a3"),
-        "random": any random legal move is played,
-        "MM": MiniMax algorithm, 
-        "AB": Alpha–beta pruning algorithm without incremental heuristic value updating,
-        "ABE": Alpha–beta pruning algorithm with incremental heuristic value updating.
-    '''
-    
-    # opponent/user
-    opponentMode = "random" # Options: "user", "random"
-    
-    # engine
-    engineColor = 1 # Options: 
-                    # 0: black, 1: white.
-    
-    engineMode = "ABE" # Options: "random", "MM", "AB", "ABE"
-                        # Recommended/fastest mode: "ABE"
                         
 # ===========================================================================================
 # Initialization
 # ===========================================================================================
         
+def main(engineColor, engineMode, depth, opponentMode):
+    
     boardState, positionKings, BWpieces, castlingStatus, evalPoints, moveCol = initialization()
     
     
@@ -74,10 +39,10 @@ A new game begins here!\n""")
     line = "_________________________"
     print(line)
       
-# ===========================================================================================
-# Main game execution loop
-# ===========================================================================================
-    
+    # ===========================================================================================
+    # Main game execution loop
+    # ===========================================================================================
+        
     while 1: 
                 
         color = moveNumber % 2
@@ -97,7 +62,6 @@ A new game begins here!\n""")
                      
         # engine's turn
         else: 
-            
             start = time.time()
                 
             if engineMode == "AB":
@@ -120,7 +84,6 @@ A new game begins here!\n""")
         
             engine_time = end-start
             engine_moves += 1
-        
         
         # print the chosen move
         if (color == engineColor and engineMode == "user") or (color == 1-engineColor and opponentMode == "user"): print("")
@@ -163,22 +126,53 @@ A new game begins here!\n""")
                         
             # return status, evalList, moveNumber, color, engineColor
             break
-    
+        
+        moveNumber += 1
+        
         # fails to end the game
         if moveNumber == 100:
             status = 8
             break
-        
-        moveNumber += 1
     
-    return status, evalList, moveNumber, color, engineColor
+    return status, evalList, moveNumber
 
+# ===========================================================================================
+# Parameters
+# ===========================================================================================
+'''
+Depth options:
+    any whole number in a range [1,inf).
+    
+Color options: 
+    0: black, 
+    1: white.
+    
+Mode options:
+    "user": user mannualy inputs their move in console in long algebraic notation (ex: "a2a3"),
+    "random": any random legal move is played,
+    "MM": MiniMax algorithm, 
+    "AB": Alpha–beta pruning algorithm without incremental heuristic value updating,
+    "ABE": Alpha–beta pruning algorithm with incremental heuristic value updating.
+'''
+    
+# engine
+depth = 1  
+
+engineColor = 1 # Options: 
+                # 0: black, 1: white.
+
+engineMode = "ABE" # Options: "random", "MM", "AB", "ABE"
+                    # Recommended/fastest mode: "ABE"
+                    
+# opponent/user
+opponentMode = "random" # Options: "user", "random"
+              
 # ===========================================================================================
 # Calling functions
 # ===========================================================================================
-
+      
 # calling main function
-status, evalList, moveNumber, color, engineColor  = main(depth)
+status, evalList, moveNumber  = main(engineColor, engineMode, depth, opponentMode)
 
 # plot the evaluation after each move
 plotEvl(status, evalList, moveNumber)
