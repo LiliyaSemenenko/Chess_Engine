@@ -161,7 +161,7 @@ depth = 1
 engineColor = 1 # Options: 
                 # 0: black, 1: white.
 
-engineMode = "random" # Options: "random", "MM", "AB", "ABE"
+engineMode = "ABE" # Options: "random", "MM", "AB", "ABE"
                     # Recommended/fastest mode: "ABE"
                     
 # opponent/user
