@@ -6,12 +6,14 @@ from chessFunctions import *
 from ui import *
 
 # ===========================================================================================
-# Test functions: testPlot, testEngine
+# Test functions: testPlot, testEngine, testBugs
 # ===========================================================================================
+
+#TP##########################################################################################
 
 def testPlot(testData, engineColor, Whmoves, Blmoves, Drmoves, over100moves):
         
-    ### plot 1
+    ### plot 1: game results for the engine
     gameResult = list(testData.keys())
     totalMoves = list(testData.values())
       
@@ -29,7 +31,7 @@ def testPlot(testData, engineColor, Whmoves, Blmoves, Drmoves, over100moves):
     plt.savefig("testBar_depth_"+str(depth)+".png")
     plt.show()
     
-    ### plot 2
+    ### plot 2: distribution of the number of moves
     plt.figure(figsize = (6,6))
     
     if engineColor == 0: TM = Blmoves
@@ -57,6 +59,8 @@ def testPlot(testData, engineColor, Whmoves, Blmoves, Drmoves, over100moves):
         plt.show()
     
     
+#TE##########################################################################################
+
 def testEngine(engineColor, engineMode, depth, opponentMode, numberGames):
     
     testData = {}
@@ -108,14 +112,16 @@ def testEngine(engineColor, engineMode, depth, opponentMode, numberGames):
         except:
             print('Fatal error in main loop')
             failedGames += 1
-            continue
+            continue # Comment out "continue" if you want the engine to stop when a bug occurs.
+                    # Otherwise, it will keep running until numberGames is reached.
             
         
     testPlot(testData, engineColor, Whmoves, Blmoves, Drmoves, over100moves)
     
     print("Failed games:", failedGames)
     print("Passed")
-            
+     
+    
 # ===========================================================================================
 # Parameters
 # ===========================================================================================
@@ -138,15 +144,15 @@ Mode options:
     "ABE": Alpha–beta pruning algorithm with incremental heuristic value updating.
 '''
 
-numberGames = 100
+numberGames = 10
 
 # engine
-depth = 3
+depth = 2
 
 engineColor = 1 # Options: 
                 # 0: black, 1: white.
 
-engineMode = "ABE" # Options: "random", "MM", "AB", "ABE"
+engineMode = "random" # Options: "random", "MM", "AB", "ABE"
                     # Recommended/fastest mode: "ABE"
                     
 # opponent/user

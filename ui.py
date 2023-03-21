@@ -8,7 +8,7 @@ from global_parameters import *
 from legal_checks import *
 
 # ===========================================================================================
-# Functions: printboard, stringTOmove, moveTOstring, getUserInput, validInput
+# Functions: printboard, stringTOmove, moveTOstring, getUserInput, validInput, plotEvl
 # ===========================================================================================
 
 #PB##########################################################################################
@@ -131,7 +131,9 @@ def validInput(userMove):
                 return True
     else:
         return False
-    
+
+#PE##########################################################################################
+
 def plotEvl(status, evalList, moveNumber):
     
     # plot game evaluation where x = move number, y = evaluation
@@ -140,7 +142,6 @@ def plotEvl(status, evalList, moveNumber):
     
     evl = np.array(evalList, dtype = float)
     evl = evl.astype(np.float32)
-    # print("original:",evl)
 
     if evl[-2] == 0: 
         evl = evl[:-1]
@@ -152,8 +153,6 @@ def plotEvl(status, evalList, moveNumber):
 
     else: evl*=1/np.abs(evl[-1])
 
-    # print("scaled",evl)
-
     plt.figure(figsize = (6,6))
     plt.plot(mn, evl, color='green')
     plt.ylim([-1,1])
@@ -164,15 +163,3 @@ def plotEvl(status, evalList, moveNumber):
     plt.savefig("evalplot.png")
     plt.show()
     
-    
-def plotTest(status, evalList, moveNumber, color):
-    
-    plt.figure(figsize = (6,6))
-    plt.plot(mn, evl, color='green')
-    plt.ylim([-1,1])
-    plt.axhline(0)
-    plt.xlabel('Move number')
-    plt.ylabel('Evaluation score')
-    plt.title("Game evaluation")
-    plt.savefig("evalplot.png")
-    plt.show()

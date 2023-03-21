@@ -130,7 +130,7 @@ A new game begins here!\n""")
         moveNumber += 1
         
         # fails to end the game
-        if moveNumber == 100:
+        if moveNumber == 101:
             status = 8
             break
     
@@ -161,7 +161,7 @@ depth = 1
 engineColor = 1 # Options: 
                 # 0: black, 1: white.
 
-engineMode = "ABE" # Options: "random", "MM", "AB", "ABE"
+engineMode = "random" # Options: "random", "MM", "AB", "ABE"
                     # Recommended/fastest mode: "ABE"
                     
 # opponent/user
