@@ -103,6 +103,7 @@ In addition, `python test.py` could be used to run n number of games and test th
 An experiment involving a compilation of 100 games at depth 3, where the engine operated as the white player against a random black player (random mode uses no heuristics and picks any legal move available), was carried out. The outcomes are illustrated in the plots displayed below:
 ![100 games reslut](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/testBar_depth_3.png)
 ![100 games distribution](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/testHist_depth_3.png)
+
 `Failed games: 0`
 
 # Limitations
