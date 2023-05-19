@@ -16,7 +16,7 @@ The simplest way to run Liliya_Bot is through the terminal interface:
 
 `python main.py`
 
-<img src="https://github.com/LiliyaSemenenko/Chess_Engine/raw/master/plots/chess_animation.gif" width="600" height="200">
+<img src="https://github.com/LiliyaSemenenko/Chess_Engine/raw/master/plots/chess_animation.gif" width="300" height="500">
 
 
 <pre>
