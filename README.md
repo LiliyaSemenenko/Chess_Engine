@@ -16,7 +16,7 @@ The simplest way to run Liliya_Bot is through the terminal interface. Here's an 
 
 `python main.py`
 
-<img src="https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/chess_animation.gif" width="200" height="500">
+<img src="https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/chess_animation.gif" width="300" height="500">
 
 
 ## Use it as a UCI engine
