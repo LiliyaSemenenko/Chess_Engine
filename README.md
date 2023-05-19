@@ -19,6 +19,9 @@ The simplest way to run Liliya_Bot is through the terminal interface:
 
 ![video](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/chess_animation.gif)
 
+<img src="https://github.com/LiliyaSemenenko/Chess_Engine/raw/master/plots/chess_animation.gif" width="400" height="300">
+
+
 <pre>
 _________________________
 White  to move
