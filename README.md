@@ -12,13 +12,11 @@ Liliya_Bot is a chess engine fully written in Python that utilizes:
 # Play against Liliya-Bot!
 ## Use it via command-line
 
-The simplest way to run Liliya_Bot is through the terminal interface:
+The simplest way to run Liliya_Bot is through the terminal interface. Here's an example of a game when the engine is playing as white at depth 2 vs a random player with black pieces:
 
 `python main.py`
 
-An example of a game when the engine is playing as white at depth 2 vs a random player with black pieces:
-
-<img src="https://github.com/LiliyaSemenenko/Chess_Engine/raw/master/plots/chess_animation.gif" width="200" height="500">
+<img src="https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/chess_animation.gif" width="200" height="500">
 
 
 ## Use it as a UCI engine
