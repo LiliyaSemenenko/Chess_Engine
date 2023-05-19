@@ -16,6 +16,9 @@ The simplest way to run Liliya_Bot is through the terminal interface:
 
 `python main.py`
 
+
+![video](https://github.com/LiliyaSemenenko/Chess_Engine/blob/master/plots/chess_animation.gif)
+
 <pre>
 _________________________
 White  to move
