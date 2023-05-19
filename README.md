@@ -16,48 +16,10 @@ The simplest way to run Liliya_Bot is through the terminal interface:
 
 `python main.py`
 
-<img src="https://github.com/LiliyaSemenenko/Chess_Engine/raw/master/plots/chess_animation.gif" width="300" height="500">
+An example of a game when the engine is playing as white at depth 2 vs a random player with black pieces:
 
+<img src="https://github.com/LiliyaSemenenko/Chess_Engine/raw/master/plots/chess_animation.gif" width="200" height="500">
 
-<pre>
-_________________________
-White  to move
-
-Enter current & destination square or resign: e2e4
-
-evaluation:  40 
-
-8 ♜ ♞ ♝ ♛ ♚ ♝ ♞ ♜ 
-7 ♟ ♟ ♟ ♟ ♟ ♟ ♟ ♟ 
-6 ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ 
-5 ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ 
-4 ☐ ☐ ☐ ☐ ♙ ☐ ☐ ☐ 
-3 ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ 
-2 ♙ ♙ ♙ ♙ ☐ ♙ ♙ ♙ 
-1 ♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖ 
-  a  b  c  d  e  f  g  h
-
-Total number of moves:  1 
-_________________________
-Black  to move
-
-chosen move: g8f6 
-
-evaluation:  -10 
-
-8 ♜ ♞ ♝ ♛ ♚ ♝ ☐ ♜ 
-7 ♟ ♟ ♟ ♟ ♟ ♟ ♟ ♟ 
-6 ☐ ☐ ☐ ☐ ☐ ♞ ☐ ☐ 
-5 ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ 
-4 ☐ ☐ ☐ ☐ ♙ ☐ ☐ ☐ 
-3 ☐ ☐ ☐ ☐ ☐ ☐ ☐ ☐ 
-2 ♙ ♙ ♙ ♙ ☐ ♙ ♙ ♙ 
-1 ♖ ♘ ♗ ♕ ♔ ♗ ♘ ♖ 
-  a  b  c  d  e  f  g  h
-
-Total number of moves:  2 
-_________________________
-</pre>
 
 ## Use it as a UCI engine
 
